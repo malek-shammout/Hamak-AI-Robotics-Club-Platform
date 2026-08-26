@@ -7,7 +7,7 @@
 
 **Project:** HMK AI & Robotics Club Platform — نادي الهمك للذكاء الصنعي والروبوتيك
 **Working directory:** `E:\Full Stack X AI\Final Project`
-**Last updated:** 2026-08-26 (Session 001)
+**Last updated:** 2026-08-26 (Session 002)
 
 ---
 
@@ -78,6 +78,11 @@ A7 generalises A2…A6 (§1.3 of Step 1) — realised as `ADMIN` holding every p
 | **D-08** | Explicit publish transition | `publication_status` on all public entities |
 | **D-09** | **NEW (Session 001).** RR-2 resolved **declaratively**, not by trigger | `certificates` mirrors `clearance_status`, bound by a **composite FK** to `clearance_records(id, status)` + a CHECK restricting it to approved states |
 | **D-10** | **NEW (Session 001).** Supabase Auth owns credentials | `users.password_hash` removed; `users.id` → FK `auth.users(id)`; `token_epoch` retained for JWT invalidation |
+| **D-11** | **NEW (Session 002).** Privileged domain logic lives in the **database**, not in Server Actions | Every user-uncontrollable transition is a `SECURITY DEFINER` function; Server Actions are thin forwarders. **Corollary: SECURITY DEFINER bypasses RLS, so every such function asserts its own authorisation as its first act** — ownership vs `auth.uid()` or `app.has_perm()`. That assertion IS the boundary; a function added without one is a hole |
+| **D-12** | **NEW (Session 002).** BR-05's evaluation half is an **A2 attestation**; there is no evaluations entity | Step 1 §3 = "marked passed by A2"; Step 2 §B.1 = "Domain service", not a table. M4's assessment tables bind to `applications`, not `enrollments`. `mark_enrollment_completed` takes an explicit boolean; `false` fails the rule exactly as short attendance does. **Do not add an evaluations table without a new D- decision** |
+| **D-13** | **NEW (Session 002).** **Row scoping is not column scoping** | A table holding columns its row-owner must not write gets a **column-level GRANT** or an **RPC-only write path**. Learned from two real flaws: `attempt_answers.awarded_score` (self-grading) and `users.email` (contributor credits) |
+| **D-14** | **NEW (Session 002).** Lock order is **cohort → application**, always | `respond_to_offer` originally inverted it against the seat allocator — a deadlock under concurrent load. Any future function touching both tables must use this order |
+| **D-15** | **NEW (Session 002).** A question used by an `ACTIVE`/`LOCKED` test is **frozen** | Editing it would silently rewrite a live exam and invalidate graded attempts. Trigger refuses; `clone_question_as_new_version()` is the sanctioned route |
 
 ### Residual risks (from Part D.3)
 | # | Risk | Status |
@@ -289,48 +294,68 @@ Work cycles through five personas; each hands off explicitly.
 
 ## 13. Current Status
 
-**Session 001 (2026-08-25 → 2026-08-26)**
+**Last updated: end of Session 002 (2026-08-26).** Journal: `journals/2026-08-26-session-002.md`
 
+### Live system
 | Artifact | Status |
 |---|---|
-| `supabase/schema.sql` | ✅ **APPLIED to the live project** 2026-08-26. Verified in-database: 78 tables, 7 views, 55 enums, 370 policies, 22 triggers, 0 tables without RLS |
-| BR-01 clearance lock | ✅ **Adversarially tested against the live DB** — 3 attacks blocked, legitimate path succeeded, probe rolled back clean |
-| `package.json` | ✅ Installed — 786 packages, `package-lock.json` committed |
-| App scaffold | ✅ `src/app/[locale]` — typecheck ✅ `tsc --noEmit` clean · build ✅ `next build` exit 0 · runtime ✅ both locales verified in a real browser |
-| `claude.md` | ✅ This file |
-| Supabase project | ✅ `hgzuiowjxjmyelelzybn` — "Hamak AI & Robotics Club", us-west-2, PG 17.6.1, ACTIVE_HEALTHY |
-| Supabase MCP tools | ⚠️ **Not registered in this session.** Server binary and PAT both verified working; the project-scoped `.mcp.json` entry needs an approval prompt a non-interactive session cannot display. Schema was applied via the Management API `database/query` endpoint instead — the same call the MCP server makes internally |
+| Supabase project | `hgzuiowjxjmyelelzybn` — "Hamak AI & Robotics Club", us-west-2, PG 17.6.1, ACTIVE_HEALTHY |
+| `supabase/schema.sql` | ✅ **Applied.** In-DB: **78 tables / 7 views / 55 enums / 380 policies / 36 functions / 0 tables without RLS** |
+| Entity reconciliation | ✅ `grep -c '^create table public\.'` = 78 = live count = §5. **Data model unchanged since freeze** |
+| Migrations | 15 files on disk, 20 tracked in `supabase_migrations` |
+| Scheduler | ✅ `pg_cron` job `hmk-br04-expire-offers`, every 15 min, active |
+| Storage buckets | ✅ `media` (public), `certificates` (private, **no policy** — RR-4), `evidence` (private) |
+| Admin | ✅ `malek.shammout@gmail.com` — MEMBER/ACTIVE, ADMIN granted |
+| Demo data | ✅ **None.** 1 user, 0 courses, 0 applications |
+| Auth policy | min length 8, requires lower+upper+digits, reauth required on password change. **HIBP unavailable — Pro plan only (HTTP 402)** |
+| Version control | ✅ git on `main` — `5a02a63` initial, `e5518fb` LMS. **No remote** |
+| Supabase MCP | ✅ Registered and working |
 
+### Modules built
+| Module | State |
+|---|---|
+| M1 Public Portal | ✅ courses / projects / events / news (list + detail), BR-10 verification, club map |
+| M10 Identity | ✅ sign-in, register, email callback, sign-out, RBAC, session header |
+| M3 Admissions | ✅ A1 apply/offer/withdraw · A2 funnel, BR-02 gate, BR-03 allocation, BR-04 job |
+| M3 LMS delivery | ✅ sessions, attendance register, BR-05 completion, student progress |
+| M4 Assessment | ✅ attempts, auto-grading, question bank + versioning, manual grading, readiness scoring |
+| M2 Consultations | ⛔ not started |
+| **M5 Hardware Custody** | ⛔ **not started — blocks M6 entirely** |
+| M6 Clearance & Certification | ⛔ blocked on M5 (BR-01 C2–C5 read M5 tables) |
+| M7 / M8 / M9 authoring | ⛔ public read only; no staff authoring UI |
 
-### Storage buckets — created 2026-08-26
-| Bucket | Public | Limit | Client policies |
-|---|---|---|---|
-| `media` | ✅ yes | 25 MB | public read; M9 staff write/update/delete |
-| `certificates` | ❌ no | 10 MB | **none, deliberately** — RR-4. No client may read or write. Issued by service-role (S3), delivered via short-lived signed URLs only |
-| `evidence` | ❌ no | 25 MB | M5 staff read/write |
+### Verification status — honest
+| Check | Status |
+|---|---|
+| BR-01, BR-02, BR-03, BR-04, BR-05, M4 assessment + grading | ✅ **Adversarially tested** against the live DB, each rolled back |
+| `tsc --noEmit` · `next build` | ✅ exit 0 · 26 route files |
+| Public pages, both locales, RTL/LTR, toggles | ✅ verified in a real browser |
+| Route guards signed-out | ✅ verified |
+| **Signed-in flows in a browser** | ❌ **NOT verified** — needs credentials tooling should not hold |
+| **Automated test suite** | ❌ **Does not exist.** Probes were run once and rolled back, not committed |
 
-> With RLS on `storage.objects`, the *absence* of a policy for `certificates` is the
-> enforcement. Do not "helpfully" add one.
-
-### Admin bootstrap — NOT done by tooling, by design
-`supabase/migrations/_0003_bootstrap_admin.RUN_YOURSELF.sql` must be run by a human in the
-Supabase SQL Editor. It creates an auth identity, which is account creation — outside what
-tooling should do. **It sets no password**; the admin sets their own via password recovery.
-Until it is run, the platform has no ADMIN and `user_roles` cannot be granted through the app.
+> **Largest gap: there is no regression net.** Every rule above was proven by a hand-written
+> SQL probe run once. Committing those probes as a repeatable suite is the highest-value
+> next task after M5.
 
 ### Immediate next steps
-1. **Human runs** `_0003_bootstrap_admin.RUN_YOURSELF.sql`, then sets a password via
-   Dashboard → Authentication → Users → Send password recovery.
-2. Read `hmkVISUAL.pdf` and confirm the §8 palette (tokens in `globals.css` are provisional).
-3. Confirm the club lat/lng so `ClubMap` can render an embed instead of a deep link.
-4. Build out M1 public pages (courses/projects/events/news) against the RLS public-read policies.
-5. If MCP tools are wanted in future sessions, approve the project server in an interactive
-   `claude` terminal. The Management API path works regardless.
+1. **M5 hardware custody** — audit its RLS *before* writing code (three of four flaws this
+   session were found that way), then `issue_checkout` / `check_in_line` / `resolve_liability`,
+   verified adversarially, then the A3 desk UI.
+2. **Then M6** — clearance C1–C5 + certificate issuance, finally buildable.
+3. Commit the verification probes as a real test suite.
+4. Read `hmkVISUAL.pdf` and confirm the §8 palette (tokens remain **provisional**).
+5. Add a git remote — history is local-only.
 
 ### Open questions for the club
-- Exact lat/lng for the club pin.
-- Confirm the `#E31E24` palette and the charcoal/gray hex values against `hmkVISUAL.pdf`.
-- Currency default — schema assumes `SYP`.
+- Exact lat/lng for the club pin *(still open)*.
+- Confirm `#E31E24` + charcoal/gray against `hmkVISUAL.pdf` *(still open — no PDF tooling here)*.
+- Currency default — schema assumes `SYP` *(still open)*.
+- **NEW:** upgrade to Supabase Pro to enable leaked-password protection?
+- **NEW (D-12):** is an evaluations entity ever wanted? Today BR-05's evaluation half is an
+  A2 attestation with no structural record of *which* evaluations were passed.
+- **NEW:** should `project_bom_lines` stay staff-only? Excluded from public read because a
+  bill of materials exposes hardware holdings and unit costs.
 
 ---
 
@@ -391,3 +416,6 @@ Until it is run, the platform has no ADMIN and `user_roles` cannot be granted th
 | 2026-08-26 | Migration 0016 — `record_attendance`, `evaluate_completion_readiness`, `mark_enrollment_completed`. Only `HELD` sessions count (cancelled sessions never penalise a student); PRESENT/LATE/EXCUSED all count as attended. Completion opens `clearance_records` in `EVALUATING`, starting the M6 pipeline per the §B.13 state machine — it grants nothing, BR-01 still requires an APPROVED clearance |
 | 2026-08-26 | **LMS verified by adversarial probe** (rolled back): student recording own attendance → 42501; cross-cohort mark → SESSION_COHORT_MISMATCH; unjustified amendment → AMENDMENT_REASON_REQUIRED; CANCELLED excluded from denominator; 33.33% correctly fails a 75% minimum; short attendance → BR05_NOT_SATISFIED; **missing evaluation attestation → BR05_NOT_SATISFIED**; both halves → COMPLETED; A7 override → COMPLETED_BY_OVERRIDE + audit row; clearance opened EVALUATING |
 | 2026-08-26 | LMS UI: `/staff/cohorts/[code]/sessions`, `/staff/sessions/[sessionId]` (register), `/staff/cohorts/[code]/completion`, `/me/enrollments` (attendance progress bar). 27 routes, typecheck clean, build exit 0 |
+| 2026-08-26 | **Session 002 closed.** Journal `journals/2026-08-26-session-002.md`. Five new decisions ratified: **D-11** (privileged domain logic lives in the database; SECURITY DEFINER bypasses RLS so every such function asserts its own authorisation), **D-12** (BR-05's evaluation half is an A2 attestation — no evaluations entity), **D-13** (row scoping is not column scoping), **D-14** (lock order cohort → application), **D-15** (live questions frozen; changes go through versioning) |
+| 2026-08-26 | Session 002 verification summary: BR-01/02/03/04/05, M3 offer transitions, M4 assessment, M4 manual grading + versioning — **all adversarially tested against the live DB and rolled back**. Typecheck + build exit 0, 26 route files. **Not verified: signed-in flows in a browser; no automated test suite exists** |
+| 2026-08-26 | Entity count re-reconciled at session close: `grep -c '^create table public\.' supabase/schema.sql` = **78** = live base-table count = §5. **The data model has not changed since the freeze** |
