@@ -1,0 +1,123 @@
+@import 'tailwindcss';
+
+/* =============================================================================
+   HMK Design System - Bold Minimalism + Tech Pixel Accent
+   claude.md 8. NOTE: palette transcribed from the club brief; hmkVISUAL.pdf has
+   not been machine-read yet, so these values are PROVISIONAL.
+   ========================================================================== */
+
+@theme {
+  /* --- Brand ------------------------------------------------------------- */
+  --color-hmk-red: #e31e24;
+  --color-hmk-red-hover: #c4181d;
+  --color-hmk-red-subtle: #e31e2419;
+
+  --color-hmk-charcoal: #14171a;
+  --color-hmk-charcoal-raised: #1c2024;
+  --color-hmk-gray: #6b7280;
+  --color-hmk-gray-line: #2a2f35;
+
+  --color-hmk-white: #ffffff;
+  --color-hmk-black: #000000;
+
+  /* --- Typography -------------------------------------------------------- */
+  /* Madani is the primary face for ALL UI text, Arabic and Latin alike.
+     Minecraft is accent-only: big numerals and tech flourishes, never body,
+     never Arabic. See claude.md 8. */
+  --font-sans: var(--font-madani), 'Segoe UI', system-ui, sans-serif;
+  --font-accent: var(--font-minecraft), 'Courier New', monospace;
+
+  /* --- Shape ------------------------------------------------------------- */
+  /* Minimal corner radius: flat surfaces, clear borders, no heavy shadows. */
+  --radius-card: 2px;
+  --radius-control: 2px;
+}
+
+/* Semantic tokens. Light is the base; dark overrides below. Every colour used in
+   a component must come from one of these - never a raw hex in markup. */
+:root {
+  --background: #f7f8f9;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --border: #dfe3e8;
+  --foreground: #14171a;
+  --foreground-muted: #5b6470;
+  --accent: var(--color-hmk-red);
+  --accent-foreground: #ffffff;
+  --ring: var(--color-hmk-red);
+}
+
+.dark {
+  --background: #0e1113;
+  --surface: var(--color-hmk-charcoal);
+  --surface-raised: var(--color-hmk-charcoal-raised);
+  --border: var(--color-hmk-gray-line);
+  --foreground: #f2f4f6;
+  --foreground-muted: #9aa4b0;
+  --accent: var(--color-hmk-red);
+  --accent-foreground: #ffffff;
+  --ring: var(--color-hmk-red);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    /* Western digits in both locales - engineering context. claude.md 7. */
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  /* Arabic needs a little more line height to stay readable at body sizes. */
+  html[lang='ar'] body {
+    line-height: 1.85;
+  }
+
+  html[lang='en'] body {
+    line-height: 1.65;
+  }
+
+  /* Visible focus is non-negotiable for WCAG AA keyboard access. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* The signature motif. Decorative only - always aria-hidden. */
+  .hmk-binary-bar {
+    font-family: var(--font-accent);
+    font-size: 0.6875rem;
+    letter-spacing: 0.28em;
+    color: var(--foreground-muted);
+    opacity: 0.35;
+    user-select: none;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .hmk-card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+  }
+}
