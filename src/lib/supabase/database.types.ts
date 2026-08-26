@@ -4193,6 +4193,14 @@ export type Database = {
         Args: { p_enrollment_id: string; p_override_justification?: string }
         Returns: Json
       }
+      approve_requisition: {
+        Args: {
+          p_line_approvals?: Json
+          p_note?: string
+          p_requisition_id: string
+        }
+        Returns: Json
+      }
       check_in_line: {
         Args: {
           p_assessed_value?: number
@@ -4268,6 +4276,17 @@ export type Database = {
         }
         Returns: Json
       }
+      raise_requisition: {
+        Args: {
+          p_cohort_id?: string
+          p_event_id?: string
+          p_lines: Json
+          p_project_id?: string
+          p_purpose_type: Database["public"]["Enums"]["requisition_purpose_type"]
+          p_required_by: string
+        }
+        Returns: string
+      }
       record_attendance: {
         Args: {
           p_amendment_reason?: string
@@ -4278,6 +4297,11 @@ export type Database = {
         }
         Returns: undefined
       }
+      reject_requisition: {
+        Args: { p_reason: string; p_requisition_id: string }
+        Returns: undefined
+      }
+      release_expired_reservations: { Args: never; Returns: Json }
       resolve_liability: {
         Args: {
           p_liability_id: string
