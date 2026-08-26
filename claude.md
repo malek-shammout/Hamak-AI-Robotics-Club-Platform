@@ -7,7 +7,7 @@
 
 **Project:** HMK AI & Robotics Club Platform — نادي الهمك للذكاء الصنعي والروبوتيك
 **Working directory:** `E:\Full Stack X AI\Final Project`
-**Last updated:** 2026-08-26 (Session 002)
+**Last updated:** 2026-08-26 (Session 003)
 
 ---
 
@@ -83,11 +83,13 @@ A7 generalises A2…A6 (§1.3 of Step 1) — realised as `ADMIN` holding every p
 | **D-13** | **NEW (Session 002).** **Row scoping is not column scoping** | A table holding columns its row-owner must not write gets a **column-level GRANT** or an **RPC-only write path**. Learned from two real flaws: `attempt_answers.awarded_score` (self-grading) and `users.email` (contributor credits) |
 | **D-14** | **NEW (Session 002).** Lock order is **cohort → application**, always | `respond_to_offer` originally inverted it against the seat allocator — a deadlock under concurrent load. Any future function touching both tables must use this order |
 | **D-15** | **NEW (Session 002).** A question used by an `ACTIVE`/`LOCKED` test is **frozen** | Editing it would silently rewrite a live exam and invalidate graded attempts. Trigger refuses; `clone_question_as_new_version()` is the sanctioned route |
+| **D-16** | **NEW (Session 003).** Every business rule ships with a **committed adversarial test** | Rules live in `supabase/tests/` and run on `npm run test:db` / `npm run verify`. A rule verified once by an ad-hoc probe is anecdote, not verification. **Each test MUST end with `raise exception 'ALL_..._PASSED'`** so the transaction aborts and no row persists; the runner treats a clean return as a FAILURE precisely to catch a test that commits |
+| **D-17** | **NEW (Session 003).** Custody and liability tables are **RPC-write-only** | `checkouts`, `checkout_lines`, `liability_records` have **no staff write policies**. All mutation goes through `issue_checkout` / `check_in_line` / `resolve_liability`, which assert BR-06/07/12/13. A hand-edit that skips `resolve_liability()` skips BR-06 with it — proven possible before this change. Catalogue tables keep ordinary staff CRUD (bookkeeping, not custody state) |
 
 ### Residual risks (from Part D.3)
 | # | Risk | Status |
 |---|---|---|
-| RR-1 | Seat allocation + stock reservation are concurrency-sensitive | **Open** — needs serializable txn / row locks in the service layer |
+| RR-1 | Seat allocation + stock reservation are concurrency-sensitive | **Partly closed.** Seat allocation IS guarded: `respond_to_offer` and `run_seat_allocation` lock the cohort (`for update`) and re-count seats, and D-14 fixes the lock-order inversion between them. Custody is guarded by `uq_checkout_active_unit` + a `for update` on the unit. **Still open: `stock_reservations` for BULK items — no reservation flow exists yet** |
 | RR-2 | `CK_CERT_CLEARANCE_APPROVED` needs more than a plain FK | **Closed by D-09** |
 | RR-3 | Consumables and the return obligation | **Closed** — club confirmed 2026-08-25: consumables (`is_consumable = true`) are **excluded** from BR-01 |
 | RR-4 | Certificate document immutability | **Open** — versioned private bucket + content hash on `media_assets` |
@@ -294,68 +296,89 @@ Work cycles through five personas; each hands off explicitly.
 
 ## 13. Current Status
 
-**Last updated: end of Session 002 (2026-08-26).** Journal: `journals/2026-08-26-session-002.md`
+**Last updated: end of Session 003 (2026-08-26).** Journal: `journals/2026-08-26-session-003.md`
 
 ### Live system
 | Artifact | Status |
 |---|---|
-| Supabase project | `hgzuiowjxjmyelelzybn` — "Hamak AI & Robotics Club", us-west-2, PG 17.6.1, ACTIVE_HEALTHY |
-| `supabase/schema.sql` | ✅ **Applied.** In-DB: **78 tables / 7 views / 55 enums / 380 policies / 36 functions / 0 tables without RLS** |
-| Entity reconciliation | ✅ `grep -c '^create table public\.'` = 78 = live count = §5. **Data model unchanged since freeze** |
-| Migrations | 15 files on disk, 20 tracked in `supabase_migrations` |
-| Scheduler | ✅ `pg_cron` job `hmk-br04-expire-offers`, every 15 min, active |
-| Storage buckets | ✅ `media` (public), `certificates` (private, **no policy** — RR-4), `evidence` (private) |
-| Admin | ✅ `malek.shammout@gmail.com` — MEMBER/ACTIVE, ADMIN granted |
-| Demo data | ✅ **None.** 1 user, 0 courses, 0 applications |
-| Auth policy | min length 8, requires lower+upper+digits, reauth required on password change. **HIBP unavailable — Pro plan only (HTTP 402)** |
-| Version control | ✅ git on `main` — `5a02a63` initial, `e5518fb` LMS. **No remote** |
-| Supabase MCP | ✅ Registered and working |
+| Supabase project | `hgzuiowjxjmyelelzybn` — us-west-2, PG 17.6.1, ACTIVE_HEALTHY |
+| Live inventory | **78 tables / 7 views / 371 policies / 43 functions / 0 tables without RLS** |
+| Entity reconciliation | schema.sql **78** = live **78** = §5 sum **78**. **Data model unchanged since freeze** |
+| Migrations | 17 files on disk |
+| Scheduler | `pg_cron` job `hmk-br04-expire-offers`, every 15 min, active |
+| Storage | `media` (public), `certificates` (private, **no policy** — RR-4), `evidence` (private) |
+| Admin | `malek.shammout@gmail.com` — MEMBER/ACTIVE, ADMIN |
+| Demo data | **None.** 1 user, 0 courses, 0 checkouts, 0 certificates |
+| Auth | min 8, lower+upper+digits, reauth on password change. **HIBP unavailable — Pro plan only** |
+| Version control | git `main`, 6 commits. **No remote — history is local-only** |
 
-### Modules built
+> Policy count moved 380 → 371 in Session 003: exactly the nine staff-write policies
+> dropped from `checkouts` / `checkout_lines` / `liability_records` by D-17.
+
+### Modules
 | Module | State |
 |---|---|
-| M1 Public Portal | ✅ courses / projects / events / news (list + detail), BR-10 verification, club map |
-| M10 Identity | ✅ sign-in, register, email callback, sign-out, RBAC, session header |
-| M3 Admissions | ✅ A1 apply/offer/withdraw · A2 funnel, BR-02 gate, BR-03 allocation, BR-04 job |
-| M3 LMS delivery | ✅ sessions, attendance register, BR-05 completion, student progress |
-| M4 Assessment | ✅ attempts, auto-grading, question bank + versioning, manual grading, readiness scoring |
+| M1 Public Portal | ✅ courses / projects / events / news, BR-10 verification, club map |
+| M10 Identity | ✅ sign-in, register, email callback, sign-out, RBAC |
+| M3 Admissions | ✅ A1 apply/offer/withdraw · A2 funnel, BR-02, BR-03, BR-04 job |
+| M3 LMS delivery | ✅ sessions, attendance register, BR-05 completion |
+| M4 Assessment | ✅ attempts, auto-grading, question bank + versioning, manual grading, readiness |
+| **M5 Hardware Custody** | ✅ issue / check-in / liability, A3 desk UI |
+| **M6 Clearance & Certification** | ✅ §B.2 evaluation, approval, issuance, verification |
 | M2 Consultations | ⛔ not started |
-| **M5 Hardware Custody** | ⛔ **not started — blocks M6 entirely** |
-| M6 Clearance & Certification | ⛔ blocked on M5 (BR-01 C2–C5 read M5 tables) |
 | M7 / M8 / M9 authoring | ⛔ public read only; no staff authoring UI |
+
+**The student lifecycle is closed and verified end to end:** application → screening →
+offer → enrolment → attendance → completion → custody → return → damage → liability →
+resolution → clearance → certificate → public verification.
+
+### Test suite — `npm run test:db`
+| # | Covers |
+|---|---|
+| 01 | BR-01 clearance lock |
+| 02 | M3 offers, BR-04 lazy expiry |
+| 03 | BR-02 gate, BR-03 allocation, BR-04 promotion |
+| 04 | M4 assessment — **self-grading regression guard** |
+| 05 | M4 grading, BR-09 amendments, D-15 freeze |
+| 06 | BR-05 attendance + D-12 attestation |
+| 07 | M5 custody — **waiver regression guard** |
+| 08 | M6 full lifecycle, §B.2, BR-01, BR-10 |
+
+**8/8 passing.** Every test aborts its transaction; nothing persists (row-counted after).
 
 ### Verification status — honest
 | Check | Status |
 |---|---|
-| BR-01, BR-02, BR-03, BR-04, BR-05, M4 assessment + grading | ✅ **Adversarially tested** against the live DB, each rolled back |
-| `tsc --noEmit` · `next build` | ✅ exit 0 · 26 route files |
-| Public pages, both locales, RTL/LTR, toggles | ✅ verified in a real browser |
+| All BR-01…BR-13 | ✅ **Adversarially tested** against the live DB, each rolled back |
+| `tsc --noEmit` · `next build` | ✅ exit 0 · 34 route files |
+| Message catalogues | ✅ balanced, **578 keys each** |
+| Public pages, both locales, RTL/LTR | ✅ verified in a real browser |
 | Route guards signed-out | ✅ verified |
-| **Signed-in flows in a browser** | ❌ **NOT verified** — needs credentials tooling should not hold |
-| **Automated test suite** | ❌ **Does not exist.** Probes were run once and rolled back, not committed |
+| **Signed-in flows in a browser** | ❌ **STILL NOT VERIFIED** |
+| **Frontend unit / E2E tests** | ❌ `npm run test` (vitest) has nothing to run |
 
-> **Largest gap: there is no regression net.** Every rule above was proven by a hand-written
-> SQL probe run once. Committing those probes as a repeatable suite is the highest-value
-> next task after M5.
+> The database is now well covered. **The frontend has no automated coverage at all.**
+> That asymmetry is the honest state of the work.
 
-### Immediate next steps
-1. **M5 hardware custody** — audit its RLS *before* writing code (three of four flaws this
-   session were found that way), then `issue_checkout` / `check_in_line` / `resolve_liability`,
-   verified adversarially, then the A3 desk UI.
-2. **Then M6** — clearance C1–C5 + certificate issuance, finally buildable.
-3. Commit the verification probes as a real test suite.
-4. Read `hmkVISUAL.pdf` and confirm the §8 palette (tokens remain **provisional**).
-5. Add a git remote — history is local-only.
+### Immediate next steps — agreed with the club
+1. **Requisition approval flow** — `approve_requisition`, stock reservation (RR-1), A4/A3 UI.
+   Unlocks team/event custody, which `issue_checkout` supports but nothing can reach.
+2. **S3 certificate PDF** — render into the private versioned `certificates` bucket, content
+   hash on `media_assets`, short-lived signed URLs. Closes **RR-4**. The bucket has no
+   client policy by design — keep it that way.
+3. **Git remote** — push history off this disk.
+4. One manual click-through of a signed-in staff path.
 
 ### Open questions for the club
-- Exact lat/lng for the club pin *(still open)*.
-- Confirm `#E31E24` + charcoal/gray against `hmkVISUAL.pdf` *(still open — no PDF tooling here)*.
-- Currency default — schema assumes `SYP` *(still open)*.
-- **NEW:** upgrade to Supabase Pro to enable leaked-password protection?
-- **NEW (D-12):** is an evaluations entity ever wanted? Today BR-05's evaluation half is an
-  A2 attestation with no structural record of *which* evaluations were passed.
-- **NEW:** should `project_bom_lines` stay staff-only? Excluded from public read because a
-  bill of materials exposes hardware holdings and unit costs.
+- Exact lat/lng for the club pin *(open)*.
+- Confirm `#E31E24` + charcoal/gray against `hmkVISUAL.pdf` *(open — no PDF tooling here)*.
+- Currency default — schema assumes `SYP` *(open)*.
+- Upgrade to Supabase Pro to enable leaked-password protection?
+- **(D-12)** Is an evaluations entity ever wanted? BR-05's evaluation half is an A2
+  attestation with no structural record of *which* evaluations were passed.
+- Should `project_bom_lines` stay staff-only? Excluded from public read because a BOM
+  exposes hardware holdings and unit costs.
+- **NEW:** who may approve requisitions — A4 (raiser) or A3 (holder of the stock)?
 
 ---
 
@@ -426,3 +449,7 @@ Work cycles through five personas; each hands off explicitly.
 | 2026-08-26 | **Migration 0018 — M6 clearance & certificate issuance.** §B.2 implemented literally: `approval_enabled = C1 ∧ C2 ∧ C3 ∧ C4 ∧ C5`. **A1 is recorded as advisory and marked `blocking:false`; it must NEVER enter the conjunction** (D-04 Option C). C2/C3 read `v_enrollment_outstanding_items` so RR-3 consumables are excluded in exactly one place. `issue_certificate` writes `clearance_status` from the **locked** clearance row, so the D-09 composite FK cannot be circumvented |
 | 2026-08-26 | **Full student lifecycle verified end to end** (test 08, rolled back): enrol → attend → complete → borrow → damage → liability → resolve → inspect → clearance → certificate → public verification. Asserts C1 blocks issuance, RR-3 consumables never block C2, **A1 fires as advisory but C4 ignores it**, BR-10 code is 128-bit, second issuance refused, and revoking a clearance under a live certificate raises `foreign_key_violation` |
 | 2026-08-26 | M6 UI: `/staff/clearance`, `/staff/clearance/[enrollmentId]` (B.2 table, blockers, approve, issue), `/me/certificates`. **The student view omits the A1 advisory entirely** — §B.2 says it is not shown to students, and it concerns other enrollments |
+| 2026-08-26 | **Session 003 closed.** Journal `journals/2026-08-26-session-003.md`. Two decisions ratified: **D-16** (every business rule ships with a committed adversarial test; each must abort its transaction, and the runner treats a clean return as failure) and **D-17** (custody and liability tables are RPC-write-only) |
+| 2026-08-26 | **The student lifecycle is closed and verified end to end** — application → screening → offer → enrolment → attendance → completion → custody → return → damage → liability → resolution → clearance → certificate → public verification. Proven by `supabase/tests/08`, rolled back |
+| 2026-08-26 | Session 003 verification summary: **8/8 database tests pass**, nothing persisted. Typecheck + build exit 0, 34 route files, message catalogues balanced at 578 keys. Live DB: 78 tables / 7 views / 371 policies / 43 functions / **0 without RLS**. **Still not verified: signed-in flows in a browser; the frontend has no automated coverage at all** |
+| 2026-08-26 | Entity count re-reconciled at session close: `grep -c '^create table public\.' supabase/schema.sql` = **78** = live base tables = §5 sum. **The data model has not changed since the freeze** |
