@@ -7,7 +7,7 @@
 
 **Project:** HMK AI & Robotics Club Platform — نادي الهمك للذكاء الصنعي والروبوتيك
 **Working directory:** `E:\Full Stack X AI\Final Project`
-**Last updated:** 2026-08-26 (Session 003)
+**Last updated:** 2026-08-27 (Session 004, in progress)
 
 ---
 
@@ -84,8 +84,8 @@ A7 generalises A2…A6 (§1.3 of Step 1) — realised as `ADMIN` holding every p
 | **D-14** | **NEW (Session 002).** Lock order is **cohort → application**, always | `respond_to_offer` originally inverted it against the seat allocator — a deadlock under concurrent load. Any future function touching both tables must use this order |
 | **D-15** | **NEW (Session 002).** A question used by an `ACTIVE`/`LOCKED` test is **frozen** | Editing it would silently rewrite a live exam and invalidate graded attempts. Trigger refuses; `clone_question_as_new_version()` is the sanctioned route |
 | **D-16** | **NEW (Session 003).** Every business rule ships with a **committed adversarial test** | Rules live in `supabase/tests/` and run on `npm run test:db` / `npm run verify`. A rule verified once by an ad-hoc probe is anecdote, not verification. **Each test MUST end with `raise exception 'ALL_..._PASSED'`** so the transaction aborts and no row persists; the runner treats a clean return as a FAILURE precisely to catch a test that commits |
-| **D-18** | **NEW (Session 004).** **Separation of duties on requisitions** — A4 raises, A3 approves | Ruled by the club: Logistics holds the truth of physical stock, so they decide. Enforced on **IDENTITY, not role**: `approve_requisition` / `reject_requisition` refuse when reviewer = requester, **admins included** — an ADMIN holds every permission and would otherwise defeat the control. Raising requires **no M5 permission at all**, only ownership of the context (project membership). That asymmetry IS the separation |
 | **D-17** | **NEW (Session 003).** Custody and liability tables are **RPC-write-only** | `checkouts`, `checkout_lines`, `liability_records` have **no staff write policies**. All mutation goes through `issue_checkout` / `check_in_line` / `resolve_liability`, which assert BR-06/07/12/13. A hand-edit that skips `resolve_liability()` skips BR-06 with it — proven possible before this change. Catalogue tables keep ordinary staff CRUD (bookkeeping, not custody state) |
+| **D-18** | **NEW (Session 004).** **Separation of duties on requisitions** — A4 raises, A3 approves | Ruled by the club: Logistics holds the truth of physical stock, so they decide. Enforced on **IDENTITY, not role**: `approve_requisition` / `reject_requisition` refuse when reviewer = requester, **admins included** — an ADMIN holds every permission and would otherwise defeat the control. Raising requires **no M5 permission at all**, only ownership of the context (project membership). That asymmetry IS the separation |
 
 ### Residual risks (from Part D.3)
 | # | Risk | Status |
