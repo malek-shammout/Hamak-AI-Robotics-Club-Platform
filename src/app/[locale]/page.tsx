@@ -28,12 +28,16 @@ export default async function HomePage({params}: {params: Promise<{locale: strin
           >
             {t('ctaPrimary')}
           </Link>
+          {/* The secondary CTA pointed at /consultations, which does not exist — M2 is
+              not built. Next prefetched it and every home-page load 404'd; a visitor
+              clicking it would have landed on a 404. Pointing at a real page is the
+              honest state of the product. Restore the consultations CTA when M2 ships. */}
           <Link
-            href="/consultations"
+            href="/projects"
             className="rounded-[--radius-control] border border-[--border] px-5 py-2.5
                        text-sm font-semibold transition-colors hover:border-hmk-red hover:text-hmk-red"
           >
-            {t('ctaSecondary')}
+            {t('ctaSecondaryProjects')}
           </Link>
         </div>
       </section>

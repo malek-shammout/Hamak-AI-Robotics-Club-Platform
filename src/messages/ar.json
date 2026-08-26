@@ -23,7 +23,8 @@
     "ctaSecondary": "اطلب استشارة",
     "statsCourses": "دورة تدريبية",
     "statsProjects": "مشروع",
-    "statsMembers": "عضو"
+    "statsMembers": "عضو",
+    "ctaSecondaryProjects": "تصفّح المشاريع"
   },
   "location": {
     "heading": "موقع النادي",

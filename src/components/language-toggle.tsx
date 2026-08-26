@@ -2,7 +2,7 @@
 
 import {useTransition} from 'react';
 import {useLocale, useTranslations} from 'next-intl';
-import {useParams} from 'next/navigation';
+import {useParams, useSearchParams} from 'next/navigation';
 import {usePathname, useRouter} from '@/i18n/navigation';
 import {useUiStore} from '@/stores/ui-store';
 import {createClient} from '@/lib/supabase/client';
@@ -21,6 +21,10 @@ export function LanguageToggle() {
   const locale = useLocale() as Locale;
   const pathname = usePathname();
   const params = useParams();
+  // usePathname() returns the path WITHOUT the query string, so switching language
+  // silently dropped it — a visitor who pasted a verification code into /verify?code=…
+  // lost it on the toggle. claude.md §7 requires route AND query to survive.
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const setPreferredLocale = useUiStore((s) => s.setPreferredLocale);
@@ -45,7 +49,7 @@ export function LanguageToggle() {
 
       router.replace(
         // @ts-expect-error - pathname is a validated route at runtime
-        {pathname, params},
+        {pathname, params, query: Object.fromEntries(searchParams.entries())},
         {locale: next}
       );
     });

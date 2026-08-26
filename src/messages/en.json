@@ -23,7 +23,8 @@
     "ctaSecondary": "Request a consultation",
     "statsCourses": "Courses",
     "statsProjects": "Projects",
-    "statsMembers": "Members"
+    "statsMembers": "Members",
+    "ctaSecondaryProjects": "Browse projects"
   },
   "location": {
     "heading": "Club location",
