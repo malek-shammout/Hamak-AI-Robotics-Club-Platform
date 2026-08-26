@@ -4201,6 +4201,10 @@ export type Database = {
         Args: { p_application_id: string }
         Returns: number
       }
+      evaluate_completion_readiness: {
+        Args: { p_enrollment_id: string }
+        Returns: Json
+      }
       expire_stale_offers: { Args: never; Returns: Json }
       finalize_attempt_grading: {
         Args: { p_attempt_id: string }
@@ -4228,6 +4232,24 @@ export type Database = {
         Returns: undefined
       }
       has_permission: { Args: { p_code: string }; Returns: boolean }
+      mark_enrollment_completed: {
+        Args: {
+          p_enrollment_id: string
+          p_evaluations_passed: boolean
+          p_override_reason?: string
+        }
+        Returns: Json
+      }
+      record_attendance: {
+        Args: {
+          p_amendment_reason?: string
+          p_cohort_session_id: string
+          p_enrollment_id: string
+          p_note?: string
+          p_state: Database["public"]["Enums"]["attendance_state"]
+        }
+        Returns: undefined
+      }
       respond_to_offer: {
         Args: { p_accept: boolean; p_application_id: string }
         Returns: string

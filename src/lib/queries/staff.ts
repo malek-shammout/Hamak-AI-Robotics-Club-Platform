@@ -28,7 +28,7 @@ export async function getCohortByCodeForStaff(code: string) {
   const supabase = await createClient();
   const {data, error} = await supabase
     .from('cohorts')
-    .select('id, code, capacity, waitlist_capacity, status, starts_on, offer_confirmation_hours, courses(code, title_ar, title_en, requires_screening)')
+    .select('id, code, capacity, waitlist_capacity, status, starts_on, offer_confirmation_hours, min_attendance_pct, courses(code, title_ar, title_en, requires_screening)')
     .eq('code', code)
     .maybeSingle();
   if (error) throw error;
