@@ -7,7 +7,7 @@
 
 **Project:** HMK AI & Robotics Club Platform — نادي الهمك للذكاء الصنعي والروبوتيك
 **Working directory:** `E:\Full Stack X AI\Final Project`
-**Last updated:** 2026-08-27 (Session 004, in progress)
+**Last updated:** 2026-08-27 (Session 004)
 
 ---
 
@@ -298,89 +298,86 @@ Work cycles through five personas; each hands off explicitly.
 
 ## 13. Current Status
 
-**Last updated: end of Session 003 (2026-08-26).** Journal: `journals/2026-08-26-session-003.md`
+**Last updated: end of Session 004 (2026-08-27).** Journal: `journals/2026-08-27-session-004.md`
 
 ### Live system
 | Artifact | Status |
 |---|---|
 | Supabase project | `hgzuiowjxjmyelelzybn` — us-west-2, PG 17.6.1, ACTIVE_HEALTHY |
-| Live inventory | **78 tables / 7 views / 371 policies / 43 functions / 0 tables without RLS** |
-| Entity reconciliation | schema.sql **78** = live **78** = §5 sum **78**. **Data model unchanged since freeze** |
-| Migrations | 17 files on disk |
-| Scheduler | `pg_cron` job `hmk-br04-expire-offers`, every 15 min, active |
-| Storage | `media` (public), `certificates` (private, **no policy** — RR-4), `evidence` (private) |
-| Admin | `malek.shammout@gmail.com` — MEMBER/ACTIVE, ADMIN |
-| Demo data | **None.** 1 user, 0 courses, 0 checkouts, 0 certificates |
+| Live inventory | **78 tables / 7 views / 371 policies / 50 functions / 0 tables without RLS** |
+| Entity reconciliation | schema.sql **78** = live **78** = §5 sum **78**. **Unchanged since freeze** (D-19 added columns, not tables) |
+| Migrations | 19 files on disk |
+| Schedulers | `hmk-br04-expire-offers` (15 min) · `hmk-rr1-release-reservations` (hourly) |
+| Storage | `media` (public), `certificates` (private, **no client policy** — RR-4), `evidence` (private) |
+| Demo data | **None.** 1 user (ADMIN); 0 everywhere else |
 | Auth | min 8, lower+upper+digits, reauth on password change. **HIBP unavailable — Pro plan only** |
-| Version control | git `main`, 6 commits. **No remote — history is local-only** |
-
-> Policy count moved 380 → 371 in Session 003: exactly the nine staff-write policies
-> dropped from `checkouts` / `checkout_lines` / `liability_records` by D-17.
+| **Version control** | ✅ **`github.com/malek-shammout/Hamak-AI-Robotics-Club-Platform`** — 12 commits, in sync, 175 files. No secrets in tree **or history** |
 
 ### Modules
 | Module | State |
 |---|---|
 | M1 Public Portal | ✅ courses / projects / events / news, BR-10 verification, club map |
-| M10 Identity | ✅ sign-in, register, email callback, sign-out, RBAC |
-| M3 Admissions | ✅ A1 apply/offer/withdraw · A2 funnel, BR-02, BR-03, BR-04 job |
-| M3 LMS delivery | ✅ sessions, attendance register, BR-05 completion |
-| M4 Assessment | ✅ attempts, auto-grading, question bank + versioning, manual grading, readiness |
-| **M5 Hardware Custody** | ✅ issue / check-in / liability, A3 desk UI |
-| **M6 Clearance & Certification** | ✅ §B.2 evaluation, approval, issuance, verification |
-| M2 Consultations | ⛔ not started |
+| M10 Identity | ✅ sign-in, register, callback, sign-out, RBAC |
+| M3 Admissions | ✅ A1 apply/offer/withdraw · A2 funnel, BR-02, BR-03, BR-04 |
+| M3 LMS delivery | ✅ sessions, attendance, BR-05 completion |
+| M4 Assessment | ✅ attempts, auto-grading, question bank, manual grading, readiness |
+| M5 Hardware Custody | ✅ requisitions (D-18), reservation (RR-1), issue/check-in/liability, A3 desk |
+| M6 Clearance & Certification | ✅ §B.2 evaluation, approval, issuance, **PDF + signed URLs (RR-4)** |
+| **M2 Consultations** | ⛔ **not started — the last unbuilt module** |
 | M7 / M8 / M9 authoring | ⛔ public read only; no staff authoring UI |
 
-**The student lifecycle is closed and verified end to end:** application → screening →
-offer → enrolment → attendance → completion → custody → return → damage → liability →
-resolution → clearance → certificate → public verification.
+**The student lifecycle is closed end to end**, and team/event custody is now reachable
+via the requisition flow.
 
-### Test suite — `npm run test:db`
-| # | Covers |
+### Residual risks — final state
+| Risk | Status |
 |---|---|
-| 01 | BR-01 clearance lock |
-| 02 | M3 offers, BR-04 lazy expiry |
-| 03 | BR-02 gate, BR-03 allocation, BR-04 promotion |
-| 04 | M4 assessment — **self-grading regression guard** |
-| 05 | M4 grading, BR-09 amendments, D-15 freeze |
-| 06 | BR-05 attendance + D-12 attestation |
-| 07 | M5 custody — **waiver regression guard** |
-| 08 | M6 full lifecycle, §B.2, BR-01, BR-10 |
+| RR-1 concurrency | ✅ **CLOSED (S004)** |
+| RR-2 certificate FK | ✅ Closed by D-09 |
+| RR-3 consumables | ✅ Closed by club ruling |
+| RR-4 document immutability | ✅ **CLOSED (S004)** |
+| RR-5 Arabic full-text search | ⚠️ **Only one left** — unevaluated Phase-2 item, not a defect |
 
-**8/8 passing.** Every test aborts its transaction; nothing persists (row-counted after).
+### Test suite — `npm run test:db` → **10/10**
+01 BR-01 · 02 M3 offers · 03 BR-02/03/04 · 04 M4 assessment (**self-grading guard**) ·
+05 M4 grading + D-15 · 06 BR-05 + D-12 · 07 M5 custody (**waiver guard**) ·
+08 M6 full lifecycle · 09 requisitions + RR-1 · 10 RR-4 immutability
+
+Every test aborts its transaction; nothing persists (row-counted after).
 
 ### Verification status — honest
 | Check | Status |
 |---|---|
-| All BR-01…BR-13 | ✅ **Adversarially tested** against the live DB, each rolled back |
-| `tsc --noEmit` · `next build` | ✅ exit 0 · 34 route files |
-| Message catalogues | ✅ balanced, **578 keys each** |
-| Public pages, both locales, RTL/LTR | ✅ verified in a real browser |
-| Route guards signed-out | ✅ verified |
-| **Signed-in flows in a browser** | ❌ **STILL NOT VERIFIED** |
-| **Frontend unit / E2E tests** | ❌ `npm run test` (vitest) has nothing to run |
+| All BR-01…BR-13, RR-1, RR-4 | ✅ **Adversarially tested**, each rolled back |
+| Certificate render + Arabic shaping | ✅ **Verified visually** — PDF rendered and inspected |
+| `tsc --noEmit` · `next build` | ✅ exit 0 · 38 route files |
+| Message catalogues | ✅ balanced, **645 keys each** |
+| **Storage upload + attach path** | ❌ **NOT verified** — needs `SUPABASE_SERVICE_ROLE_KEY` |
+| **Signed-in flows in a browser** | ❌ **NOT VERIFIED — open since Session 002** |
+| **Frontend unit / E2E tests** | ❌ vitest has nothing to run |
 
-> The database is now well covered. **The frontend has no automated coverage at all.**
-> That asymmetry is the honest state of the work.
+> The database is exhaustively covered. **The frontend has no automated coverage at
+> all.** Every new module widens that asymmetry.
 
-### Immediate next steps — agreed with the club
-1. **Requisition approval flow** — `approve_requisition`, stock reservation (RR-1), A4/A3 UI.
-   Unlocks team/event custody, which `issue_checkout` supports but nothing can reach.
-2. **S3 certificate PDF** — render into the private versioned `certificates` bucket, content
-   hash on `media_assets`, short-lived signed URLs. Closes **RR-4**. The bucket has no
-   client policy by design — keep it that way.
-3. **Git remote** — push history off this disk.
-4. One manual click-through of a signed-in staff path.
+### Deploy prerequisites
+1. `SUPABASE_SERVICE_ROLE_KEY` in the deploy environment — the `certificates` bucket has
+   no client policy by design, so the write is unavoidably service-role.
+2. `npx playwright install chromium` — else `issueCertificateDocument` returns
+   `RENDERER_UNAVAILABLE`.
+
+### Next session — club to choose
+- **A. M2 Consultations** — BR-08 SLA triage, D-06 curated expertise, expert matching,
+  message thread. Completes Pillar 1.
+- **B. Frontend verification** — vitest components, Playwright E2E over signed-in paths,
+  a manual click-through. **Recommended first:** the coverage asymmetry only grows.
 
 ### Open questions for the club
 - Exact lat/lng for the club pin *(open)*.
 - Confirm `#E31E24` + charcoal/gray against `hmkVISUAL.pdf` *(open — no PDF tooling here)*.
 - Currency default — schema assumes `SYP` *(open)*.
 - Upgrade to Supabase Pro to enable leaked-password protection?
-- **(D-12)** Is an evaluations entity ever wanted? BR-05's evaluation half is an A2
-  attestation with no structural record of *which* evaluations were passed.
-- Should `project_bom_lines` stay staff-only? Excluded from public read because a BOM
-  exposes hardware holdings and unit costs.
-- **NEW:** who may approve requisitions — A4 (raiser) or A3 (holder of the stock)?
+- **(D-12)** Is an evaluations entity ever wanted?
+- Should `project_bom_lines` stay staff-only?
 
 ---
 
@@ -464,3 +461,9 @@ resolution → clearance → certificate → public verification.
 | 2026-08-27 | **Certificate PDF renders through Chromium, not a PDF library.** `pdf-lib` and `@react-pdf/renderer` do neither bidi reordering nor Arabic contextual shaping, so Arabic comes out as disconnected letters in reverse. Playwright/Chromium does both. **Verified visually** by rendering the real template: connected glyphs, shadda preserved, RTL layout with Latin embedded LTR. Madani is embedded as a data URI so the document renders identically offline and in five years |
 | 2026-08-27 | `playwright` moved from devDependencies to **dependencies** — the renderer needs it at runtime. Deployment must also run `npx playwright install chromium`; without it `issueCertificateDocument` returns `RENDERER_UNAVAILABLE` rather than failing obscurely |
 | 2026-08-27 | ⚠️ **Git remote added but PUSH FAILED (403).** `origin` = `github.com/malek-shammout/Hamak-AI-Robotics-Club-Platform.git`. This machine's stored credential authenticates as GitHub user **`Microbots-Brabus`**, which lacks write access. **History is still local-only.** Fix by granting that account collaborator access, or switching the machine's credential to `malek-shammout` |
+| 2026-08-27 | **Session 004 closed.** Journal `journals/2026-08-27-session-004.md`. Two decisions ratified: **D-18** (separation of duties on requisitions, enforced on identity so an ADMIN cannot approve their own) and **D-19** (`media_assets.content_hash` — anticipated by Part D.3, entity count unchanged at 78) |
+| 2026-08-27 | **RR-1 and RR-4 both CLOSED. Only RR-5 remains** (Arabic full-text search — an unevaluated Phase-2 item, not a defect). Every other residual risk from Part D.3 is now resolved and covered by a committed test |
+| 2026-08-27 | **Repository pushed to GitHub** — `malek-shammout/Hamak-AI-Robotics-Club-Platform`, 12 commits, in sync. Two blockers resolved without loss: a 403 (machine credential authenticated as the wrong GitHub account) and a non-fast-forward (repo created with a README → unrelated histories). **Resolved by merge, not force-push** — a force would have deleted the remote commit; the merge kept it and preserved all 10 local hashes |
+| 2026-08-27 | **A defect only visual inspection could catch.** The certificate's decorative binary bars inherited `rtl`, so bidi dragged the trailing digit to the front and they rendered as `1 01001000…`. No type, test or lint would have found it — it was found by rendering the PDF and looking at it. Pinned to `ltr` |
+| 2026-08-27 | Session 004 verification: **10/10 database tests pass**, nothing persisted. Typecheck + build exit 0, 38 route files, 645 message keys per locale. Live DB: 78 tables / 7 views / 371 policies / 50 functions / **0 without RLS** / 2 cron jobs. Entity reconciliation holds: schema.sql 78 = live 78 = §5 sum 78 |
+| 2026-08-27 | **Still not verified, unchanged since Session 002: signed-in flows in a browser, and the frontend has no automated coverage at all.** Also unverified: the certificate storage upload path, which needs `SUPABASE_SERVICE_ROLE_KEY` |
