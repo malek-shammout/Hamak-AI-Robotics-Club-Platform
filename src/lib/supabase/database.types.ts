@@ -4189,6 +4189,10 @@ export type Database = {
       }
     }
     Functions: {
+      approve_clearance: {
+        Args: { p_enrollment_id: string; p_override_justification?: string }
+        Returns: Json
+      }
       check_in_line: {
         Args: {
           p_assessed_value?: number
@@ -4211,6 +4215,7 @@ export type Database = {
         Args: { p_application_id: string }
         Returns: number
       }
+      evaluate_clearance: { Args: { p_enrollment_id: string }; Returns: Json }
       evaluate_completion_readiness: {
         Args: { p_enrollment_id: string }
         Returns: Json
@@ -4242,6 +4247,7 @@ export type Database = {
         Returns: undefined
       }
       has_permission: { Args: { p_code: string }; Returns: boolean }
+      issue_certificate: { Args: { p_enrollment_id: string }; Returns: Json }
       issue_checkout: {
         Args: {
           p_custody_type: Database["public"]["Enums"]["custody_type"]

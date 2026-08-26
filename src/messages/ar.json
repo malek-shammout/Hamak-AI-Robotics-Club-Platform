@@ -613,5 +613,86 @@
       "SERIALIZED": "مرقّم",
       "BULK": "بالكمية"
     }
+  },
+  "clearance": {
+    "queueTitle": "براءة الذمة",
+    "queueLead": "تقييم شروط براءة الذمة وإصدار الشهادات.",
+    "queueEmpty": "لا توجد سجلات براءة ذمة بعد.",
+    "queueNote": "{n} سجل بانتظار التقييم أو الاعتماد.",
+    "backToQueue": "العودة إلى القائمة",
+    "decisionTable": "جدول القرار (B.2)",
+    "evaluatedAt": "قُيّم في",
+    "notEvaluated": "لم يُقيَّم بعد.",
+    "reevaluate": "أعد التقييم",
+    "evaluating": "جارٍ التقييم…",
+    "openBlockers": "الموانع القائمة",
+    "readyToApprove": "جاهز للاعتماد",
+    "outstandingElsewhere": "مسؤوليات في مكان آخر",
+    "approveTitle": "اعتماد براءة الذمة",
+    "approve": "اعتمد",
+    "approveByOverride": "اعتمد باستثناء",
+    "cannotApprove": "لا يمكن الاعتماد قبل استيفاء الشروط.",
+    "overrideReason": "سبب الاستثناء (مطلوب)",
+    "overrideHint": "الاستثناء متاح لمدير النظام فقط ويُسجَّل في سجل التدقيق (UC-6.13).",
+    "approvedByOverride": "اعتُمدت باستثناء: {reason}",
+    "certificateTitle": "الشهادة",
+    "issueCertificate": "أصدر الشهادة",
+    "issuing": "جارٍ الإصدار…",
+    "issueHint": "لا يمكن إصدار شهادة إلا ببراءة ذمة معتمدة لهذا التسجيل (BR-01).",
+    "noIssuePermission": "لا تملك صلاحية الإصدار.",
+    "serialNo": "الرقم التسلسلي",
+    "issuedOn": "تاريخ الإصدار",
+    "verificationCode": "رمز التحقق",
+    "advisoryTitle": "تنبيه غير مانع",
+    "advisoryBody": "لدى هذا الشخص مسؤوليات غير مسوّاة على تسجيلات أخرى. هذا تنبيه لفريق اللوجستيات فقط ولا يمنع اعتماد براءة الذمة لهذا التسجيل (BR-13).",
+    "conditions": {
+      "C1_NOT_COMPLETED": "اكتملت الدورة",
+      "C2_ITEMS_OUTSTANDING": "لا يوجد عتاد غير مُعاد",
+      "C3_INSPECTION_PENDING": "تم فحص كل ما أُعيد",
+      "C4_LIABILITY_OPEN": "لا توجد مسؤولية مفتوحة لهذا التسجيل",
+      "C5_INCIDENT_OPEN": "لا يوجد بلاغ عتاد مفتوح"
+    },
+    "statuses": {
+      "EVALUATING": "قيد التقييم",
+      "WITHHELD": "محجوبة",
+      "APPROVED": "معتمدة",
+      "APPROVED_BY_OVERRIDE": "معتمدة باستثناء",
+      "REVOKED": "ملغاة"
+    },
+    "errors": {
+      "AUTH_REQUIRED": "يجب تسجيل الدخول.",
+      "FORBIDDEN": "لا تملك الصلاحية.",
+      "ENROLLMENT_NOT_FOUND": "التسجيل غير موجود.",
+      "PRECONDITIONS_FAILED": "لم تُستوفَ شروط براءة الذمة.",
+      "OVERRIDE_REQUIRES_ADMIN": "الاستثناء متاح لمدير النظام فقط.",
+      "ALREADY_APPROVED": "براءة الذمة معتمدة بالفعل.",
+      "NO_CLEARANCE_RECORD": "لا يوجد سجل براءة ذمة.",
+      "CLEARANCE_NOT_APPROVED": "براءة الذمة غير معتمدة (BR-01).",
+      "CERTIFICATE_ALREADY_ISSUED": "الشهادة صادرة بالفعل.",
+      "INVALID_INPUT": "بيانات غير صالحة.",
+      "UNEXPECTED": "حدث خطأ غير متوقع."
+    }
+  },
+  "myCerts": {
+    "title": "شهاداتي",
+    "lead": "شهاداتك الصادرة وحالة براءة الذمة.",
+    "pendingTitle": "بانتظار براءة الذمة",
+    "issuedTitle": "الشهادات الصادرة",
+    "empty": "لا توجد شهادات صادرة بعد.",
+    "awaitingApproval": "استُوفيت الشروط — بانتظار اعتماد فريق اللوجستيات.",
+    "verificationCode": "رمز التحقق",
+    "verifyLink": "افتح صفحة التحقق",
+    "statuses": {
+      "EVALUATING": "قيد التقييم",
+      "WITHHELD": "محجوبة",
+      "APPROVED": "معتمدة",
+      "APPROVED_BY_OVERRIDE": "معتمدة باستثناء",
+      "REVOKED": "ملغاة"
+    },
+    "certStatuses": {
+      "ISSUED": "صادرة",
+      "REVOKED": "ملغاة",
+      "REISSUED": "أُعيد إصدارها"
+    }
   }
 }

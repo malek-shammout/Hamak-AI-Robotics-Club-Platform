@@ -613,5 +613,86 @@
       "SERIALIZED": "Serialized",
       "BULK": "Bulk"
     }
+  },
+  "clearance": {
+    "queueTitle": "Clearance",
+    "queueLead": "Evaluate clearance preconditions and issue certificates.",
+    "queueEmpty": "No clearance records yet.",
+    "queueNote": "{n} record(s) awaiting evaluation or approval.",
+    "backToQueue": "Back to queue",
+    "decisionTable": "Decision table (B.2)",
+    "evaluatedAt": "Evaluated",
+    "notEvaluated": "Not evaluated yet.",
+    "reevaluate": "Re-evaluate",
+    "evaluating": "Evaluating...",
+    "openBlockers": "Open blockers",
+    "readyToApprove": "Ready to approve",
+    "outstandingElsewhere": "Outstanding elsewhere",
+    "approveTitle": "Approve clearance",
+    "approve": "Approve",
+    "approveByOverride": "Approve by override",
+    "cannotApprove": "Cannot approve until the preconditions are met.",
+    "overrideReason": "Override reason (required)",
+    "overrideHint": "Override is admin-only and is unconditionally audited (UC-6.13).",
+    "approvedByOverride": "Approved by override: {reason}",
+    "certificateTitle": "Certificate",
+    "issueCertificate": "Issue certificate",
+    "issuing": "Issuing...",
+    "issueHint": "A certificate can only exist against an approved clearance for this enrollment (BR-01).",
+    "noIssuePermission": "You do not have permission to issue certificates.",
+    "serialNo": "Serial number",
+    "issuedOn": "Issued on",
+    "verificationCode": "Verification code",
+    "advisoryTitle": "Advisory — not blocking",
+    "advisoryBody": "This person has unresolved liabilities on OTHER enrollments. This is a Logistics signal only and does not block clearance for this enrollment (BR-13).",
+    "conditions": {
+      "C1_NOT_COMPLETED": "Course completed",
+      "C2_ITEMS_OUTSTANDING": "No hardware outstanding",
+      "C3_INSPECTION_PENDING": "Everything returned has been inspected",
+      "C4_LIABILITY_OPEN": "No open liability for this enrollment",
+      "C5_INCIDENT_OPEN": "No open asset incident"
+    },
+    "statuses": {
+      "EVALUATING": "Evaluating",
+      "WITHHELD": "Withheld",
+      "APPROVED": "Approved",
+      "APPROVED_BY_OVERRIDE": "Approved (override)",
+      "REVOKED": "Revoked"
+    },
+    "errors": {
+      "AUTH_REQUIRED": "Please sign in.",
+      "FORBIDDEN": "You do not have permission.",
+      "ENROLLMENT_NOT_FOUND": "Enrollment not found.",
+      "PRECONDITIONS_FAILED": "The clearance preconditions are not met.",
+      "OVERRIDE_REQUIRES_ADMIN": "Override is admin-only.",
+      "ALREADY_APPROVED": "This clearance is already approved.",
+      "NO_CLEARANCE_RECORD": "No clearance record exists.",
+      "CLEARANCE_NOT_APPROVED": "The clearance is not approved (BR-01).",
+      "CERTIFICATE_ALREADY_ISSUED": "A certificate has already been issued.",
+      "INVALID_INPUT": "Invalid input.",
+      "UNEXPECTED": "Something went wrong."
+    }
+  },
+  "myCerts": {
+    "title": "My certificates",
+    "lead": "Your issued certificates and clearance status.",
+    "pendingTitle": "Awaiting clearance",
+    "issuedTitle": "Issued certificates",
+    "empty": "No certificates issued yet.",
+    "awaitingApproval": "All conditions met — awaiting Logistics approval.",
+    "verificationCode": "Verification code",
+    "verifyLink": "Open the verification page",
+    "statuses": {
+      "EVALUATING": "Evaluating",
+      "WITHHELD": "Withheld",
+      "APPROVED": "Approved",
+      "APPROVED_BY_OVERRIDE": "Approved (override)",
+      "REVOKED": "Revoked"
+    },
+    "certStatuses": {
+      "ISSUED": "Issued",
+      "REVOKED": "Revoked",
+      "REISSUED": "Reissued"
+    }
   }
 }
