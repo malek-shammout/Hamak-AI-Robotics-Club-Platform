@@ -4189,6 +4189,16 @@ export type Database = {
       }
     }
     Functions: {
+      check_in_line: {
+        Args: {
+          p_assessed_value?: number
+          p_condition_at_return: Database["public"]["Enums"]["asset_condition"]
+          p_evidence_media_id?: string
+          p_inspection_notes?: string
+          p_line_id: string
+        }
+        Returns: Json
+      }
       clone_question_as_new_version: {
         Args: { p_question_id: string }
         Returns: string
@@ -4232,6 +4242,18 @@ export type Database = {
         Returns: undefined
       }
       has_permission: { Args: { p_code: string }; Returns: boolean }
+      issue_checkout: {
+        Args: {
+          p_custody_type: Database["public"]["Enums"]["custody_type"]
+          p_due_at: string
+          p_enrollment_id?: string
+          p_holder_user_id: string
+          p_lines: Json
+          p_override_justification?: string
+          p_requisition_id?: string
+        }
+        Returns: string
+      }
       mark_enrollment_completed: {
         Args: {
           p_enrollment_id: string
@@ -4247,6 +4269,15 @@ export type Database = {
           p_enrollment_id: string
           p_note?: string
           p_state: Database["public"]["Enums"]["attendance_state"]
+        }
+        Returns: undefined
+      }
+      resolve_liability: {
+        Args: {
+          p_liability_id: string
+          p_note?: string
+          p_replacement_asset_unit_id?: string
+          p_status: Database["public"]["Enums"]["liability_status"]
         }
         Returns: undefined
       }

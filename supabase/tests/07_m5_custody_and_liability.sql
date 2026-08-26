@@ -52,8 +52,11 @@ begin
   v_stage := 'student_issues_checkout';
   perform set_config('request.jwt.claims', json_build_object('sub', v_stu::text)::text, true);
   begin
-    perform public.issue_checkout('STUDENT', v_stu, v_enr, null, now() + interval '7 days',
-      jsonb_build_array(jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit)));
+    perform public.issue_checkout(
+      p_custody_type => 'STUDENT', p_holder_user_id => v_stu,
+      p_due_at => now() + interval '7 days',
+      p_lines => jsonb_build_array(jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit)),
+      p_enrollment_id => v_enr);
     raise exception 'BREACH: a student issued custody to themselves';
   exception when insufficient_privilege then null;
   end;
@@ -63,8 +66,10 @@ begin
   ------------------------------------------------------------------ BR-12
   v_stage := 'br12_student_without_enrollment';
   begin
-    perform public.issue_checkout('STUDENT', v_stu, null, null, now() + interval '7 days',
-      jsonb_build_array(jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit)));
+    perform public.issue_checkout(
+      p_custody_type => 'STUDENT', p_holder_user_id => v_stu,
+      p_due_at => now() + interval '7 days',
+      p_lines => jsonb_build_array(jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit)));
     raise exception 'BREACH: student custody issued with no enrollment (BR-12)';
   exception when others then
     if sqlerrm not like '%ENROLLMENT_REQUIRED%' then raise; end if;
@@ -72,8 +77,11 @@ begin
 
   v_stage := 'br12_team_without_approved_requisition';
   begin
-    perform public.issue_checkout('PROJECT_TEAM', v_stu, null, gen_random_uuid(), now() + interval '7 days',
-      jsonb_build_array(jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit)));
+    perform public.issue_checkout(
+      p_custody_type => 'PROJECT_TEAM', p_holder_user_id => v_stu,
+      p_due_at => now() + interval '7 days',
+      p_lines => jsonb_build_array(jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit)),
+      p_requisition_id => gen_random_uuid());
     raise exception 'BREACH: team custody issued without an approved requisition (BR-12)';
   exception when others then
     if sqlerrm not like '%REQUISITION_NOT_APPROVED%' then raise; end if;
@@ -81,8 +89,11 @@ begin
 
   v_stage := 'due_date_in_past';
   begin
-    perform public.issue_checkout('STUDENT', v_stu, v_enr, null, now() - interval '1 day',
-      jsonb_build_array(jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit)));
+    perform public.issue_checkout(
+      p_custody_type => 'STUDENT', p_holder_user_id => v_stu,
+      p_due_at => now() - interval '1 day',
+      p_lines => jsonb_build_array(jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit)),
+      p_enrollment_id => v_enr);
     raise exception 'BREACH: custody issued with a due date in the past';
   exception when others then
     if sqlerrm not like '%DUE_DATE_IN_PAST%' then raise; end if;
@@ -90,10 +101,13 @@ begin
 
   ------------------------------------------------------------------ legitimate issue
   v_stage := 'issue';
-  v_co := public.issue_checkout('STUDENT', v_stu, v_enr, null, now() + interval '7 days',
-    jsonb_build_array(
+  v_co := public.issue_checkout(
+    p_custody_type => 'STUDENT', p_holder_user_id => v_stu,
+    p_due_at => now() + interval '7 days',
+    p_lines => jsonb_build_array(
       jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit),
-      jsonb_build_object('asset_type_id', v_bulk_type, 'quantity', 3)));
+      jsonb_build_object('asset_type_id', v_bulk_type, 'quantity', 3)),
+    p_enrollment_id => v_enr);
   if (select status from public.asset_units where id = v_unit) <> 'CHECKED_OUT' then
     raise exception 'BREACH: the serialized unit was not marked CHECKED_OUT';
   end if;
@@ -101,8 +115,11 @@ begin
   ------------------------------------------------------------------ BR-07
   v_stage := 'br07_double_custody';
   begin
-    perform public.issue_checkout('STUDENT', v_stu, v_enr, null, now() + interval '7 days',
-      jsonb_build_array(jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit)));
+    perform public.issue_checkout(
+      p_custody_type => 'STUDENT', p_holder_user_id => v_stu,
+      p_due_at => now() + interval '7 days',
+      p_lines => jsonb_build_array(jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit)),
+      p_enrollment_id => v_enr);
     raise exception 'BREACH: the same serialized unit was issued twice (BR-07)';
   exception when others then
     if sqlerrm not like '%UNIT_ALREADY_CHECKED_OUT%' and sqlerrm not like '%UNIT_NOT_AVAILABLE%' then raise; end if;
@@ -137,8 +154,11 @@ begin
   ------------------------------------------------------------------ BR-13
   v_stage := 'br13_blocks_new_custody';
   begin
-    perform public.issue_checkout('STUDENT', v_stu, v_enr, null, now() + interval '7 days',
-      jsonb_build_array(jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit2)));
+    perform public.issue_checkout(
+      p_custody_type => 'STUDENT', p_holder_user_id => v_stu,
+      p_due_at => now() + interval '7 days',
+      p_lines => jsonb_build_array(jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit2)),
+      p_enrollment_id => v_enr);
     raise exception 'BREACH: new custody issued while a liability was unresolved (BR-13)';
   exception when others then
     if sqlerrm not like '%HOLDER_HAS_OPEN_LIABILITY%' then raise; end if;
@@ -146,9 +166,12 @@ begin
 
   v_stage := 'br13_override_requires_admin';
   begin
-    perform public.issue_checkout('STUDENT', v_stu, v_enr, null, now() + interval '7 days',
-      jsonb_build_array(jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit2)),
-      'Logistics wants to override.');
+    perform public.issue_checkout(
+      p_custody_type => 'STUDENT', p_holder_user_id => v_stu,
+      p_due_at => now() + interval '7 days',
+      p_lines => jsonb_build_array(jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit2)),
+      p_enrollment_id => v_enr,
+      p_override_justification => 'Logistics wants to override.');
     raise exception 'BREACH: a non-admin overrode the BR-13 custody block';
   exception when insufficient_privilege then null;
   end;
@@ -183,8 +206,11 @@ begin
   end if;
 
   v_stage := 'br13_clears_after_resolution';
-  v_co2 := public.issue_checkout('STUDENT', v_stu, v_enr, null, now() + interval '7 days',
-    jsonb_build_array(jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit2)));
+  v_co2 := public.issue_checkout(
+    p_custody_type => 'STUDENT', p_holder_user_id => v_stu,
+    p_due_at => now() + interval '7 days',
+    p_lines => jsonb_build_array(jsonb_build_object('asset_type_id', v_type, 'asset_unit_id', v_unit2)),
+    p_enrollment_id => v_enr);
   if v_co2 is null then
     raise exception 'BREACH: custody still blocked after the liability was resolved';
   end if;
