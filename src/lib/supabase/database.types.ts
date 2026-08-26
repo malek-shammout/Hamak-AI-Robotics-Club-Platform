@@ -2559,8 +2559,10 @@ export type Database = {
           byte_size: number
           caption: string | null
           captured_on: string | null
+          content_hash: string | null
           created_at: string
           credit: string | null
+          hash_algorithm: string
           height: number | null
           id: string
           mime_type: string
@@ -2573,8 +2575,10 @@ export type Database = {
           byte_size: number
           caption?: string | null
           captured_on?: string | null
+          content_hash?: string | null
           created_at?: string
           credit?: string | null
+          hash_algorithm?: string
           height?: number | null
           id?: string
           mime_type: string
@@ -2587,8 +2591,10 @@ export type Database = {
           byte_size?: number
           caption?: string | null
           captured_on?: string | null
+          content_hash?: string | null
           created_at?: string
           credit?: string | null
+          hash_algorithm?: string
           height?: number | null
           id?: string
           mime_type?: string
@@ -4200,6 +4206,16 @@ export type Database = {
           p_requisition_id: string
         }
         Returns: Json
+      }
+      attach_certificate_document: {
+        Args: {
+          p_byte_size: number
+          p_certificate_id: string
+          p_content_hash: string
+          p_mime_type?: string
+          p_storage_key: string
+        }
+        Returns: string
       }
       check_in_line: {
         Args: {
