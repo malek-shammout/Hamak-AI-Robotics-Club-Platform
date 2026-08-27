@@ -12,6 +12,7 @@ export async function SiteHeader({locale}: {locale: Locale}) {
   const t = await getTranslations('nav');
   const tAuth = await getTranslations('auth');
   const tApp = await getTranslations('applications');
+  const tStaff = await getTranslations('staffHub');
 
   const user = await getSessionUser();
 
@@ -51,6 +52,15 @@ export async function SiteHeader({locale}: {locale: Locale}) {
                 className="hidden text-sm text-[--foreground-muted] hover:text-hmk-red sm:inline"
               >
                 {tApp('title')}
+              </Link>
+              {/* The staff hub filters itself by permission and shows a plain message to
+                  someone with none, so linking it for every signed-in user leaks nothing
+                  and saves staff from having to remember URLs. */}
+              <Link
+                href="/staff"
+                className="hidden text-sm text-[--foreground-muted] hover:text-hmk-red sm:inline"
+              >
+                {tStaff('title')}
               </Link>
               <span className="hidden text-sm font-medium sm:inline">
                 {localised(

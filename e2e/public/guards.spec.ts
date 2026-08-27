@@ -22,6 +22,13 @@ const GUARDED = [
   '/staff/requisitions',
   '/staff/consultations',
   '/staff/expertise',
+  '/staff',
+  '/staff/projects',
+  '/staff/projects/new',
+  '/staff/events',
+  '/staff/events/new',
+  '/staff/articles',
+  '/staff/articles/new',
 ] as const;
 
 for (const route of GUARDED) {

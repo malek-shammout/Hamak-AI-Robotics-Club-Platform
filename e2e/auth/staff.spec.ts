@@ -24,6 +24,10 @@ const STAFF_ROUTES = [
   '/staff/liabilities',
   '/staff/assets',
   '/staff/requisitions',
+  '/staff',
+  '/staff/projects',
+  '/staff/events',
+  '/staff/articles',
 ] as const;
 
 for (const route of STAFF_ROUTES) {

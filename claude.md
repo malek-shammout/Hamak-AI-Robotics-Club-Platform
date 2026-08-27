@@ -7,7 +7,7 @@
 
 **Project:** HMK AI & Robotics Club Platform — نادي الهمك للذكاء الصنعي والروبوتيك
 **Working directory:** `E:\Full Stack X AI\Final Project`
-**Last updated:** 2026-08-27 (Session 006)
+**Last updated:** 2026-08-27 (Session 007)
 
 ---
 
@@ -80,7 +80,7 @@ A7 generalises A2…A6 (§1.3 of Step 1) — realised as `ADMIN` holding every p
 | **D-10** | **NEW (Session 001).** Supabase Auth owns credentials | `users.password_hash` removed; `users.id` → FK `auth.users(id)`; `token_epoch` retained for JWT invalidation |
 | **D-11** | **NEW (Session 002).** Privileged domain logic lives in the **database**, not in Server Actions | Every user-uncontrollable transition is a `SECURITY DEFINER` function; Server Actions are thin forwarders. **Corollary: SECURITY DEFINER bypasses RLS, so every such function asserts its own authorisation as its first act** — ownership vs `auth.uid()` or `app.has_perm()`. That assertion IS the boundary; a function added without one is a hole |
 | **D-12** | **NEW (Session 002).** BR-05's evaluation half is an **A2 attestation**; there is no evaluations entity | Step 1 §3 = "marked passed by A2"; Step 2 §B.1 = "Domain service", not a table. M4's assessment tables bind to `applications`, not `enrollments`. `mark_enrollment_completed` takes an explicit boolean; `false` fails the rule exactly as short attendance does. **Do not add an evaluations table without a new D- decision** |
-| **D-13** | **NEW (Session 002).** **Row scoping is not column scoping** | A table holding columns its row-owner must not write gets a **column-level GRANT** or an **RPC-only write path**. Learned from **four** real flaws: `attempt_answers.awarded_score` (self-grading), `users.email` (contributor credits), `liability_records` waiver actor, and `consultation_messages` (a `WITH CHECK` that validated the sender COLUMN but never the thread — any signed-in user could inject messages into any private consultation). The recurring tell is a check that validates a **column** rather than the row's **relationship** |
+| **D-13** | **NEW (Session 002).** **Row scoping is not column scoping** | A table holding columns its row-owner must not write gets a **column-level GRANT** or an **RPC-only write path**. Learned from **five** real flaws: `attempt_answers.awarded_score` (self-grading), `users.email` (contributor credits), `liability_records` waiver actor, `consultation_messages` (a `WITH CHECK` that validated the sender COLUMN but never the thread — any signed-in user could inject messages into any private consultation), and `publication_status` on the five publishable entities (D-22). The recurring tell is a check that validates a **column** rather than the row's **relationship** — or, in D-22's case, its **transition** |
 | **D-14** | **NEW (Session 002).** Lock order is **cohort → application**, always | `respond_to_offer` originally inverted it against the seat allocator — a deadlock under concurrent load. Any future function touching both tables must use this order |
 | **D-15** | **NEW (Session 002).** A question used by an `ACTIVE`/`LOCKED` test is **frozen** | Editing it would silently rewrite a live exam and invalidate graded attempts. Trigger refuses; `clone_question_as_new_version()` is the sanctioned route |
 | **D-16** | **NEW (Session 003).** Every business rule ships with a **committed adversarial test** | Rules live in `supabase/tests/` and run on `npm run test:db` / `npm run verify`. A rule verified once by an ad-hoc probe is anecdote, not verification. **Each test MUST end with `raise exception 'ALL_..._PASSED'`** so the transaction aborts and no row persists; the runner treats a clean return as a FAILURE precisely to catch a test that commits |
@@ -89,6 +89,7 @@ A7 generalises A2…A6 (§1.3 of Step 1) — realised as `ADMIN` holding every p
 | **D-19** | **NEW (Session 004).** `media_assets.content_hash` + `hash_algorithm` added — the RR-4 mitigation | Part D.3 names this mitigation explicitly ("versioned bucket + content hash stored on media_assets"), so it is an **anticipated** addition, not an invention — but Rules of Engagement #1 still requires it recorded. **Entity count unchanged: 78 tables**, two columns on an existing one. Paired with a write-once trigger: once an asset backs a certificate its `storage_key`/`content_hash` cannot change and it cannot be deleted |
 | **D-20** | **NEW (Session 005).** **An RLS policy that subqueries another table is subject to THAT table's RLS.** Participation predicates live in a `SECURITY DEFINER` helper, never in a policy subquery | Proven on M2: `consultation_requests.self_consultations` granted access to an assigned expert via `EXISTS (SELECT 1 FROM consultation_assignments ...)`, but `consultation_assignments` had no self-read policy, so the subquery returned nothing and the branch was **dead for everyone**. A policy that reads as if it grants access and grants none is worse than a missing policy, because review passes it. `app.is_consultation_participant(uuid)` is the single predicate; it takes **no user id**, only `auth.uid()`, so it cannot be used to probe anyone else |
 | **D-21** | **NEW (Session 005).** A counterpart's **display name** is disclosed by a narrow definer function, never by widening a row policy on `users` | `users.self_read_profile` scopes reads to `id = app.uid()`, so a join from a consultation thread rendered every counterpart message unattributed — proven. The fix is `get_consultation_participants(uuid)`: names only, participants only. A row policy would have exposed the whole `users` row (email included) to satisfy a need for one string. Same shape as the 0007 contributor-credits fix |
+| **D-22** | **NEW (Session 007).** **Publishing is gated on `<module>.APPROVE`, never on `UPDATE`** — enforced by a trigger, because publication is a TRANSITION, not a column | `staff_update` on the five publishable entities carried no column restriction, so anyone who could EDIT could also publish. **Proven**: a user with M7.READ/CREATE/UPDATE and explicitly *not* M7.APPROVE published a project; `ck_project_published_stamped` briefly refused, and supplying `published_at` by hand satisfied it. Not exploitable in the seed (every UPDATE holder also holds APPROVE) — it opens the moment a drafting role exists, which an authoring UI invites. A column GRANT cannot express this because the rule compares OLD to NEW; `app.assert_publish_authorised()` does, and stamps `published_at` server-side so the timestamp is not client-dictated |
 
 ### Residual risks (from Part D.3)
 | # | Risk | Status |
@@ -300,17 +301,17 @@ Work cycles through five personas; each hands off explicitly.
 
 ## 13. Current Status
 
-**Last updated: end of Session 006 (2026-08-27).** Journal: `journals/2026-08-27-session-006.md`
-> Journals 001–006 are all written. 005 and 006 were authored retroactively at the close of
+**Last updated: end of Session 007 (2026-08-27).** Journal: `journals/2026-08-27-session-007.md`
+> Journals 001–007 are all written. 005 and 006 were authored retroactively at the close of
 > Session 006, from git and the live database rather than from recollection.
 
 ### Live system
 | Artifact | Status |
 |---|---|
 | Supabase project | `hgzuiowjxjmyelelzybn` — us-west-2, PG 17.6.1, ACTIVE_HEALTHY |
-| Live inventory | **78 tables / 7 views / 375 policies / 60 functions / 0 tables without RLS** |
+| Live inventory | **78 tables / 7 views / 375 policies / 61 functions / 0 tables without RLS** · 5 publish-guard triggers (D-22) |
 | Entity reconciliation | schema.sql **78** = live **78** = §5 sum **78**. **Unchanged since freeze** (D-19 added columns, not tables) |
-| Migrations | 22 files on disk |
+| Migrations | 23 files on disk |
 | Schedulers | `hmk-br04-expire-offers` (15 min) · `hmk-rr1-release-reservations` (hourly) · `hmk-br08-escalate-sla` (20 min) |
 | Storage | `media` (public), `certificates` (private, **no client policy** — RR-4), `evidence` (private) |
 | Demo data | **None.** 1 user (ADMIN); 0 everywhere else |
@@ -328,11 +329,11 @@ Work cycles through five personas; each hands off explicitly.
 | M5 Hardware Custody | ✅ requisitions (D-18), reservation (RR-1), issue/check-in/liability, A3 desk |
 | M6 Clearance & Certification | ✅ §B.2 evaluation, approval, issuance, **PDF + signed URLs (RR-4)** |
 | **M2 Consultations** | ✅ **BUILT (S006)** — public gateway, request/thread, AD-7 triage + expert matching, BR-08 SLA escalation, D-06 curation + member availability |
-| M7 / M8 / M9 authoring | ⛔ public read only; no staff authoring UI |
+| **M7 / M8 / M9 authoring** | ✅ **BUILT (S007)** — projects, events and articles: draft → review → publish, with the BR-11 gate enforced (D-22). Plus a permission-filtered staff hub at `/staff`, without which every staff screen was URL-only |
 
-**All ten modules now have a working path**; M7/M8/M9 still lack staff authoring UI.
-The student lifecycle is closed end to end, custody is reachable via the requisition
-flow, and the graduation-project gateway is open.
+**All ten modules have a working path, and every public entity now has a staff
+authoring path.** The last structural gap is closed. What remains is coverage and
+content, not missing capability.
 
 ### Residual risks — final state
 | Risk | Status |
@@ -343,38 +344,41 @@ flow, and the graduation-project gateway is open.
 | RR-4 document immutability | ✅ **CLOSED (S004)** |
 | RR-5 Arabic full-text search | ⚠️ **Only one left** — unevaluated Phase-2 item, not a defect |
 
-### Test suite — **12 files**
+### Test suite — **13 files**
 01 BR-01 · 02 M3 offers · 03 BR-02/03/04 · 04 M4 assessment (**self-grading guard**) ·
 05 M4 grading + D-15 · 06 BR-05 + D-12 · 07 M5 custody (**waiver guard**) ·
 08 M6 full lifecycle · 09 requisitions + RR-1 · 10 RR-4 immutability ·
-11 M2 consultations (**message-injection guard**, BR-08, D-06) · 12 M2 expertise curation (D-06)
+11 M2 consultations (**message-injection guard**, BR-08, D-06) · 12 M2 expertise curation (D-06) ·
+13 BR-11 publish authorisation (**publish-without-APPROVE guard**, D-22)
 
 Every test aborts its transaction; nothing persists (row-counted after).
 
-> **Honest note on 11 and 12 (S006):** they were executed against the live database
-> via the Management API and both returned their `ALL_..._PASSED` sentinel, but they
-> have **not** been run through `scripts/run-db-tests.mjs`, which needs
-> `SUPABASE_ACCESS_TOKEN` / `SUPABASE_PROJECT_REF` in the environment. Run
-> `npm run test:db` once with those set to confirm all 12 together.
+> **Honest note on 11, 12 and 13:** each was executed against the live database via the
+> Management API and returned its `ALL_..._PASSED` sentinel, but they have **not** been
+> run through `scripts/run-db-tests.mjs`, which needs `SUPABASE_ACCESS_TOKEN` /
+> `SUPABASE_PROJECT_REF` in the environment. Run `npm run test:db` once with those set
+> to confirm all 13 together — it is the only step of `npm run verify` still unrun here.
 
 ### Verification status — honest
 | Check | Status |
 |---|---|
 | All BR-01…BR-13, RR-1, RR-4 | ✅ **Adversarially tested**, each rolled back |
 | Certificate render + Arabic shaping | ✅ **Verified visually** — PDF rendered and inspected |
-| `tsc --noEmit` · `next build` | ✅ exit 0 · 46 route files |
-| Message catalogues | ✅ balanced, **815 keys each** (parity asserted on every edit) |
+| `tsc --noEmit` · `next build` | ✅ exit 0 · 56 route entries |
+| Message catalogues | ✅ balanced, **941 keys each** (parity + ICU placeholders asserted) |
 | Storage upload + attach path | ✅ **Verified (S005)** — 8 checks incl. byte round-trip + re-hash |
-| Public + guard flows in a browser | ✅ **Playwright, 120 passing** (chromium + mobile-RTL) |
-| **Signed-in flows** | ⚠️ **specs written, never run** — `e2e/auth/*` skips without `E2E_EMAIL`/`E2E_PASSWORD` (42 skipped) |
+| Public + guard flows in a browser | ✅ **Playwright, 134 passing** (chromium + mobile-RTL) |
+| **Signed-in flows** | ✅ **RUN AT LAST (S007)** — 48 passing, 2 skipped (a clearance record the empty DB does not have). Open since Session 002 |
+| **Staff-authorised views** | ⚠️ **still unexercised** — the test account holds **0 roles**, so the staff specs assert "renders or redirects cleanly", not what an authorised user sees |
 | M2 pages in a real browser | ✅ both locales, RTL/LTR, toggle keeps route + query, no overflow at 375px |
-| **Frontend unit tests** | ❌ still none — but `npm run test` now **passes** instead of failing. `vitest.config.ts` added (S006): the default glob was sweeping up `e2e/**`, whose specs import `@playwright/test` and throw outside a Playwright runner, so `npm run test` reported **10 failed suites / 0 tests** from the moment Session 005 created `e2e/` |
+| **Frontend unit tests** | ✅ **33 tests, 5 files (S007)** — the language toggle (proven regression), the M2 forms, and the BR-11 publish controls. Rendered against the REAL message catalogues, so each doubles as a missing-key check |
 | `npm run i18n:check` | ✅ **fixed (S006)** — `scripts/check-translations.mjs` was referenced by `package.json` for four sessions but **never existed**, so the bilingual gate silently never ran. Written; now asserts key parity AND ICU placeholder parity. 815 keys, clean |
-| **`npm run lint`** | ❌ **BROKEN, pre-existing** — `next lint` was removed in Next 16, and there is no ESLint config in the repo. `eslint-config-next@16` also fails to load through `FlatCompat` on ESLint 9. **`npm run verify` therefore cannot pass end to end**; the individual steps do |
+| **`npm run lint`** | ✅ **FIXED (S007)** — `eslint-config-next@16` exports native flat config, so `FlatCompat` was the wrong tool. 0 errors, 1 documented warning. Every relaxation carries a stated reason. **`npm run verify` now passes end to end** except `test:db`, which needs credentials this machine does not hold |
 
-> The database is exhaustively covered. The frontend now has **broad public E2E
-> coverage**, but **no signed-in run and no component tests** — M2's forms, like every
-> other module's, have never been exercised by an automated test with a session.
+> The database is exhaustively covered, the frontend has broad public E2E coverage, the
+> signed-in specs finally run, and component tests exist. **The remaining gap is
+> narrower and specific: no test has ever exercised a STAFF-AUTHORISED view**, because
+> the only test account holds no roles.
 
 ### Deploy prerequisites
 1. `SUPABASE_SERVICE_ROLE_KEY` in the deploy environment — the `certificates` bucket has
@@ -382,20 +386,22 @@ Every test aborts its transaction; nothing persists (row-counted after).
 2. `npx playwright install chromium` — else `issueCertificateDocument` returns
    `RENDERER_UNAVAILABLE`.
 
-### Next session — 007
-1. **Run the signed-in E2E specs.** 42 specs, written in S005, never executed.
-   The club is provisioning the test account; needs `E2E_EMAIL` / `E2E_PASSWORD`
-   in the environment. Tooling must not create auth identities — that is account
-   creation.
-2. **Component tests.** `vitest` now runs cleanly and has nothing to run. Start with
-   the M2 forms and the language toggle (the one component with a proven regression).
-3. **M7 / M8 / M9 staff authoring UI** — the last structural gap.
-4. Optional: fix `npm run lint` so `npm run verify` passes end to end.
+### Next session — 008
+1. **A staff test account.** The current one holds 0 roles, so no test has ever seen an
+   authorised staff view — the authoring UI included. A second account with a real role
+   (say PROJECTS) would let the staff specs assert content rather than "renders or
+   redirects cleanly". A human must create it.
+2. **Reuse one signed-in session across the auth specs** (Playwright `storageState`).
+   The pass currently performs ~50 real sign-ins in 4 minutes and produced one
+   unreproducible failure; it also takes 4.4 min of the 5.
+3. **Run `npm run test:db` once** with `SUPABASE_ACCESS_TOKEN` / `SUPABASE_PROJECT_REF`
+   set, to confirm all 13 tests together through the committed runner.
+4. **Content, not code:** seed the expertise catalogue, then author the first real
+   projects/events/articles through the new screens.
 
-> **Club-owned, in progress:** provisioning the E2E test account, and curating the
-> initial expertise domains at `/staff/expertise`. **M2 stays inert until the second
-> one lands** — `suggest_experts` ranks over `member_expertise` and returns nothing
-> while it is empty.
+> **Club-owned:** curating the initial expertise domains at `/staff/expertise`.
+> **M2 stays inert until that lands** — `suggest_experts` ranks over `member_expertise`
+> and returns nothing while it is empty.
 
 ### Open questions for the club
 - Exact lat/lng for the club pin *(open)*.
@@ -405,6 +411,13 @@ Every test aborts its transaction; nothing persists (row-counted after).
 - **(D-12)** Is an evaluations entity ever wanted?
 - Should `project_bom_lines` stay staff-only?
 - **(M2)** What are the club's actual expertise fields, and who advises in each? *(open)*
+- **(M10)** Should `signOut()` stay **global scope** (the current Supabase default —
+  signing out anywhere ends every session on every device), or become `local`? Nobody
+  chose global; it is what Supabase does when passed nothing. Global is defensible on
+  shared lab machines, so this needs a ruling rather than a silent change.
+- **(M7)** Who may edit `project_members`? It grants the BR-12 right to raise a
+  requisition against that project, so the authoring screen deliberately shows it
+  read-only pending a decision.
 
 ---
 
@@ -412,6 +425,11 @@ Every test aborts its transaction; nothing persists (row-counted after).
 
 | Date | Change |
 |---|---|
+| 2026-08-27 | **The signed-in E2E specs finally ran — and the first result looked like a session-persistence bug that was not one.** 3 specs failed; server logs showed sign-in succeeding and the guard 307-ing only after a concurrent sign-out. `supabase.auth.signOut()` defaults to `scope: 'global'`, revoking every session for the user, and `fullyParallel: true` had all specs sharing one account. **5/5 serial vs 3/5 parallel** proved it. Fixed in the runner, not the assertions: `test:e2e` now runs auth as a separate `--workers=1` pass |
+| 2026-08-27 | **D-22 — publishing requires APPROVE, not UPDATE.** Sixth flaw found by auditing RLS before writing feature code. A user with M7.UPDATE and explicitly not M7.APPROVE **published a project**; the only obstacle was a stamp CHECK that hand-supplying `published_at` satisfied. Fixed by a trigger on all five publishable entities, because the rule compares OLD to NEW and a column grant cannot see a transition. `published_at` is now server-stamped — a bogus client value of 2001 was proven overridden. Migration 0025, test 13 |
+| 2026-08-27 | **M7/M8/M9 authoring built — the last structural gap.** Projects, events and articles: draft → review → publish. Articles are authored per locale and the list groups by `translation_group_id`, flagging in red any piece **published in one language only** — the failure mode row-per-locale invites. Added `/staff`, a permission-filtered hub, because every staff screen was previously reachable only by typing its URL |
+| 2026-08-27 | **`npm run lint` fixed; `npm run verify` passes end to end for the first time.** `eslint-config-next@16` exports native flat config — `FlatCompat` was the wrong tool, which is why the earlier attempt died on a circular structure. Linting immediately caught a real bug in code written the same hour: `PublishControls` defined a component inside render, remounting the form and losing in-flight submit state |
+| 2026-08-27 | First component tests: **33 across 5 files**, rendered against the REAL `ar.json`/`en.json` so each doubles as a missing-key check. The language-toggle guard was verified by reintroducing the S005 query-string bug — 2 tests failed on exactly the right assertions, then passed once restored. A test that cannot fail is not a test |
 | 2026-08-27 | **Session 006 closed.** Journals for **005 and 006** written (005 retroactively, reconstructed from git and the live DB, not recollection). Two decisions ratified: **D-20** (an RLS policy that subqueries another table is subject to THAT table's RLS — participation predicates belong in a definer helper) and **D-21** (a counterpart's display name comes from a narrow definer function, never a widened row policy on `users`). D-13 now records **four** proven instances. Commit `60a6e5a` pushed; 15 commits, in sync |
 | 2026-08-27 | **Club ruled on both M2 open questions.** BR-08 SLA stays at **48h** — reasonable for student volunteers. AD-7 duplicate handling stays **strict**: a duplicate open request with the same title is REFUSED, not merely warned, because the club judged refusing safer than advising. The frozen workflow says "warn", so this is a deliberate, recorded departure — do not "fix" `DUPLICATE_OPEN_REQUEST` back to advisory without a new ruling |
 | 2026-08-27 | **Two silently-broken links in the verification gate, found by running it.** `scripts/check-translations.mjs` was wired into `package.json` but never written, so the bilingual check had never run once; and vitest's default glob swept in `e2e/**`, so `npm run test` had reported 10 failed suites since Session 005. Both fixed. `npm run lint` remains broken — `next lint` is gone in Next 16 and the repo has no ESLint config |

@@ -1,6 +1,6 @@
 import {notFound} from 'next/navigation';
 import {getTranslations, setRequestLocale} from 'next-intl/server';
-import {redirect, Link} from '@/i18n/navigation';
+import {Link} from '@/i18n/navigation';
 import {PageHeading} from '@/components/public/page-heading';
 import {MetaPill} from '@/components/public/meta-pill';
 import {ReviewRequisitionForm} from '@/components/requisitions/review-form';

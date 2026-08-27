@@ -21,8 +21,6 @@ export function QuestionCard({
     undefined
   );
 
-  const name = `q-${question.question_id}`;
-
   return (
     <li className="hmk-card p-5">
       <form action={formAction} className="space-y-4">

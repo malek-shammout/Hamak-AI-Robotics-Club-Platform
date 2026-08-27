@@ -13,7 +13,10 @@
     "consultations": "Consultations",
     "signIn": "Sign in",
     "dashboard": "Dashboard",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "staffProjects": "Projects",
+    "staffEvents": "Events",
+    "staffArticles": "Articles"
   },
   "home": {
     "eyebrow": "Faculty of Mechanical & Electrical Engineering",
@@ -196,6 +199,13 @@
       "FAMILIAR": "Familiar",
       "PROFICIENT": "Proficient",
       "EXPERT": "Expert"
+    },
+    "publicationStatus": {
+      "DRAFT": "Draft",
+      "PENDING_REVIEW": "In review",
+      "SCHEDULED": "Scheduled",
+      "PUBLISHED": "Published",
+      "REJECTED": "Rejected"
     }
   },
   "auth": {
@@ -972,6 +982,154 @@
       "EXPERTISE_EXISTS": "That member is already recorded in this field.",
       "INVALID_INPUT": "Please check the form and try again.",
       "UNEXPECTED": "Something went wrong. Please try again."
+    }
+  },
+  "authoring": {
+    "projectsTitle": "Projects",
+    "projectsLead": "Draft, edit and publish the club's project showcase.",
+    "eventsTitle": "Events",
+    "eventsLead": "Plan events, add sessions, and publish them to the public calendar.",
+    "articlesTitle": "News & articles",
+    "articlesLead": "Write in both languages and publish when the pair is ready.",
+    "newProject": "New project",
+    "newProjectLead": "Create a draft. Publishing is a separate step.",
+    "newEvent": "New event",
+    "newEventLead": "Create a draft. Publishing is a separate step.",
+    "newArticle": "New article",
+    "newArticleLead": "Each article is written one language at a time.",
+    "backToProjects": "Back to projects",
+    "backToEvents": "Back to events",
+    "backToArticles": "Back to articles",
+    "draftsTitle": "Drafts and in review",
+    "liveTitle": "Live on the site",
+    "noDrafts": "Nothing in draft.",
+    "noLive": "Nothing published yet.",
+    "upcomingTitle": "Upcoming",
+    "pastTitle": "Past",
+    "noUpcoming": "No upcoming events.",
+    "noArticles": "No articles yet.",
+    "publication": "Publication",
+    "details": "Details",
+    "technologies": "Technologies",
+    "team": "Team",
+    "sessions": "Sessions",
+    "noSessions": "No sessions added yet.",
+    "noTeam": "No team members recorded.",
+    "teamNote": "Project membership also grants the right to raise a hardware requisition against this project (BR-12), so it is not editable here.",
+    "noTechnologies": "No technologies have been defined yet.",
+    "currentState": "Current state",
+    "submitForReview": "Submit for review",
+    "withdraw": "Withdraw to draft",
+    "publish": "Publish",
+    "unpublish": "Unpublish",
+    "reject": "Reject",
+    "approveNote": "You can edit and submit for review. Publishing needs approval rights.",
+    "liveNote": "This is live on the public site right now.",
+    "startsAsDraft": "This is created as a draft and will not appear publicly until it is published.",
+    "code": "Code",
+    "titleAr": "Title (Arabic)",
+    "titleEn": "Title (English)",
+    "abstract": "Abstract",
+    "problemStatement": "Problem statement",
+    "outcome": "Outcome",
+    "projectStatus": "Project status",
+    "startOn": "Start date",
+    "endOn": "End date",
+    "eventType": "Event type",
+    "description": "Description",
+    "startsAt": "Starts",
+    "endsAt": "Ends",
+    "venue": "Venue",
+    "noVenue": "No venue",
+    "capacity": "Capacity",
+    "eligibility": "Who can attend",
+    "addVenue": "Add a venue",
+    "venueName": "Venue name",
+    "locationNote": "Location note",
+    "sessionTitle": "Session title",
+    "room": "Room",
+    "track": "Track",
+    "speaker": "Speaker",
+    "addSession": "Add session",
+    "contentLanguage": "Content language",
+    "lockedLocaleNote": "Set by the translation you are adding.",
+    "slug": "URL slug",
+    "slugHint": "Lowercase letters, numbers and hyphens only.",
+    "articleTitle": "Title",
+    "summary": "Summary",
+    "body": "Body",
+    "category": "Category",
+    "noCategory": "No category",
+    "translationExists": "The {locale} version exists:",
+    "missingTranslation": "No {locale} version yet.",
+    "publishedWithoutTranslation": "Published, but the {locale} version is missing.",
+    "addTranslation": "Add translation",
+    "addTranslationLead": "This joins the existing article as its other language.",
+    "save": "Save",
+    "create": "Create",
+    "saving": "Saving...",
+    "saved": "Saved.",
+    "errors": {
+      "PUBLISH_REQUIRES_APPROVE": "You do not have approval rights, so you cannot change what is published.",
+      "AUTH_REQUIRED": "Please sign in to continue.",
+      "FORBIDDEN": "You do not have permission to do that.",
+      "CODE_TAKEN": "That code is already in use.",
+      "END_BEFORE_START": "The end time must be after the start time.",
+      "ROOM_DOUBLE_BOOKED": "That room is already booked for an overlapping time.",
+      "SLUG_FORMAT": "Use lowercase letters, numbers and hyphens only.",
+      "INVALID_INPUT": "Please check the form and try again.",
+      "UNEXPECTED": "Something went wrong. Please try again."
+    }
+  },
+  "staffHub": {
+    "title": "Staff area",
+    "lead": "Everything you have access to, in one place.",
+    "noAccess": "Your account has no staff permissions. If that is wrong, ask a team manager to grant a role.",
+    "tiles": {
+      "cohorts": {
+        "title": "Cohorts & admissions",
+        "body": "Applications, seat allocation, attendance and completion."
+      },
+      "questions": {
+        "title": "Question bank",
+        "body": "Author screening questions and manage versions."
+      },
+      "grading": {
+        "title": "Grading",
+        "body": "Grade written answers and finalise attempts."
+      },
+      "clearance": {
+        "title": "Clearance & certificates",
+        "body": "Evaluate the BR-01 gate, approve and issue."
+      },
+      "desk": {
+        "title": "Equipment desk",
+        "body": "Issue, check in, and resolve liabilities."
+      },
+      "requisitions": {
+        "title": "Requisitions",
+        "body": "Raise requests and review the approval queue."
+      },
+      "consultations": {
+        "title": "Consultations",
+        "body": "Triage requests and match an expert."
+      },
+      "expertise": {
+        "title": "Expertise catalogue",
+        "body": "Curate the fields the club advises in."
+      },
+      "projects": {
+        "title": "Projects",
+        "body": "Draft, edit and publish the project showcase."
+      },
+      "events": {
+        "title": "Events",
+        "body": "Plan events and sessions, publish the calendar."
+      },
+      "articles": {
+        "title": "News & articles",
+        "body": "Write in both languages and publish."
+      }
     }
   }
 }
