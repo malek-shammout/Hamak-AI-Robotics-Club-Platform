@@ -15,10 +15,9 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    include: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/**/*.{test,spec}.{ts,tsx}'],
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['e2e/**', 'node_modules/**', '.next/**'],
-    // There are no component tests yet. Failing on an empty run would make `verify`
-    // permanently red for a gap that is tracked honestly in claude.md §13 instead.
     passWithNoTests: true,
   },
   resolve: {

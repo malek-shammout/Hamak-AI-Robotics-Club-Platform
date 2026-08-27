@@ -3,6 +3,19 @@ import {test as base, expect, type Page} from '@playwright/test';
 /**
  * Fixtures for the signed-in specs.
  *
+ * THESE SPECS MUST RUN ON A SINGLE WORKER — `npm run test:e2e:auth` passes
+ * `--workers=1`, and `npm run test:e2e` runs them as a separate serial pass.
+ *
+ * Why: every spec here shares ONE account, and `supabase.auth.signOut()` defaults to
+ * `scope: 'global'` — it revokes every session for that user, on every device. Run in
+ * parallel, the sign-out spec therefore kills the sessions of the reload and
+ * language-switch specs mid-flight, and they fail looking exactly like a session-
+ * persistence bug in the product. It is not one: the same five specs pass 5/5 serially
+ * and 3/5 in parallel.
+ *
+ * Do not "fix" a future failure here by relaxing the session assertions. Check the
+ * worker count first.
+ *
  * These need a real account. Creating one is not something the tooling does — an auth
  * identity is a credential and credentials belong to the club — so the credentials come
  * from the environment.
