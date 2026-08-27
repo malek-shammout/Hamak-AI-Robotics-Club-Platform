@@ -300,8 +300,9 @@ Work cycles through five personas; each hands off explicitly.
 
 ## 13. Current Status
 
-**Last updated: end of Session 006 (2026-08-27).** Journal: `journals/2026-08-27-session-004.md`
-> Sessions 005 (frontend verification) and 006 (M2) have not had journals written yet.
+**Last updated: end of Session 006 (2026-08-27).** Journal: `journals/2026-08-27-session-006.md`
+> Journals 001–006 are all written. 005 and 006 were authored retroactively at the close of
+> Session 006, from git and the live database rather than from recollection.
 
 ### Live system
 | Artifact | Status |
@@ -381,15 +382,20 @@ Every test aborts its transaction; nothing persists (row-counted after).
 2. `npx playwright install chromium` — else `issueCertificateDocument` returns
    `RENDERER_UNAVAILABLE`.
 
-### Next session
-1. **Run the signed-in E2E specs.** They exist and have never executed. Needs a test
-   account's `E2E_EMAIL` / `E2E_PASSWORD` in the environment — a human must create it;
-   tooling does not create auth identities.
-2. **Seed the expertise catalogue with the club.** M2 is built but *inert* until A4
-   records real fields and real member expertise at `/staff/expertise`; `suggest_experts`
-   ranks over `member_expertise` and returns nothing while it is empty.
+### Next session — 007
+1. **Run the signed-in E2E specs.** 42 specs, written in S005, never executed.
+   The club is provisioning the test account; needs `E2E_EMAIL` / `E2E_PASSWORD`
+   in the environment. Tooling must not create auth identities — that is account
+   creation.
+2. **Component tests.** `vitest` now runs cleanly and has nothing to run. Start with
+   the M2 forms and the language toggle (the one component with a proven regression).
 3. **M7 / M8 / M9 staff authoring UI** — the last structural gap.
-4. Journals for Sessions 005 and 006.
+4. Optional: fix `npm run lint` so `npm run verify` passes end to end.
+
+> **Club-owned, in progress:** provisioning the E2E test account, and curating the
+> initial expertise domains at `/staff/expertise`. **M2 stays inert until the second
+> one lands** — `suggest_experts` ranks over `member_expertise` and returns nothing
+> while it is empty.
 
 ### Open questions for the club
 - Exact lat/lng for the club pin *(open)*.
@@ -406,6 +412,7 @@ Every test aborts its transaction; nothing persists (row-counted after).
 
 | Date | Change |
 |---|---|
+| 2026-08-27 | **Session 006 closed.** Journals for **005 and 006** written (005 retroactively, reconstructed from git and the live DB, not recollection). Two decisions ratified: **D-20** (an RLS policy that subqueries another table is subject to THAT table's RLS — participation predicates belong in a definer helper) and **D-21** (a counterpart's display name comes from a narrow definer function, never a widened row policy on `users`). D-13 now records **four** proven instances. Commit `60a6e5a` pushed; 15 commits, in sync |
 | 2026-08-27 | **Club ruled on both M2 open questions.** BR-08 SLA stays at **48h** — reasonable for student volunteers. AD-7 duplicate handling stays **strict**: a duplicate open request with the same title is REFUSED, not merely warned, because the club judged refusing safer than advising. The frozen workflow says "warn", so this is a deliberate, recorded departure — do not "fix" `DUPLICATE_OPEN_REQUEST` back to advisory without a new ruling |
 | 2026-08-27 | **Two silently-broken links in the verification gate, found by running it.** `scripts/check-translations.mjs` was wired into `package.json` but never written, so the bilingual check had never run once; and vitest's default glob swept in `e2e/**`, so `npm run test` had reported 10 failed suites since Session 005. Both fixed. `npm run lint` remains broken — `next lint` is gone in Next 16 and the repo has no ESLint config |
 | 2026-08-27 | **M2 built. A fifth pre-build RLS audit found a fifth exploitable flaw — and it was the worst of them.** `participants_send_messages` checked only `sender_user_id = auth.uid()` and never the thread, so **any signed-in user could inject messages into any private consultation**. Proven by posting a payment-fraud lure into a stranger's thread. The read policy beside it was correctly scoped, which is exactly why it looked safe. Migration 0022 |
