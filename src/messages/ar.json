@@ -24,7 +24,8 @@
     "statsCourses": "دورة تدريبية",
     "statsProjects": "مشروع",
     "statsMembers": "عضو",
-    "ctaSecondaryProjects": "تصفّح المشاريع"
+    "ctaSecondaryProjects": "تصفّح المشاريع",
+    "ctaSecondaryConsultations": "بوابة مشاريع التخرّج"
   },
   "location": {
     "heading": "موقع النادي",
@@ -151,6 +152,50 @@
       "MECHANICAL": "الميكانيك",
       "ML": "تعلم الآلة",
       "DOCUMENTATION": "التوثيق"
+    },
+    "supportType": {
+      "TECHNICAL_ADVICE": "استشارة تقنية",
+      "COMPONENT_SELECTION": "اختيار المكوّنات",
+      "CODE_REVIEW": "مراجعة الشيفرة",
+      "MENTORSHIP": "إرشاد",
+      "OTHER": "أخرى"
+    },
+    "consultationStatus": {
+      "NEW": "جديد",
+      "TRIAGED": "مُصنَّف",
+      "ASSIGNED": "مُسنَد",
+      "IN_PROGRESS": "قيد المعالجة",
+      "RESOLVED": "منتهٍ",
+      "REJECTED": "مرفوض",
+      "ESCALATED": "مُصعَّد"
+    },
+    "consultationPriority": {
+      "LOW": "منخفضة",
+      "NORMAL": "عادية",
+      "HIGH": "مرتفعة"
+    },
+    "consultationComplexity": {
+      "LOW": "منخفضة",
+      "MEDIUM": "متوسطة",
+      "HIGH": "مرتفعة"
+    },
+    "consultationOutcome": {
+      "ADVICE_GIVEN": "قُدِّمت الاستشارة",
+      "ONGOING_MENTORSHIP": "إرشاد مستمر",
+      "OUT_OF_SCOPE": "خارج النطاق",
+      "UNRESPONSIVE": "لم يستجب مُقدِّم الطلب"
+    },
+    "assignmentState": {
+      "PENDING_ACCEPTANCE": "بانتظار ردّك",
+      "ACCEPTED": "مقبول",
+      "DECLINED": "معتذَر عنه",
+      "NO_RESPONSE": "بلا ردّ",
+      "RELEASED": "مُحرَّر"
+    },
+    "proficiency": {
+      "FAMILIAR": "مُلِمّ",
+      "PROFICIENT": "متمكّن",
+      "EXPERT": "خبير"
     }
   },
   "auth": {
@@ -771,6 +816,162 @@
       "REJECTION_REASON_REQUIRED": "يجب ذكر سبب الرفض.",
       "INVALID_INPUT": "بيانات غير صالحة.",
       "UNEXPECTED": "حدث خطأ غير متوقع."
+    }
+  },
+  "consultations": {
+    "publicTitle": "بوابة مشاريع التخرّج",
+    "publicLead": "اعرض مشروع تخرّجك على النادي. صِف ما تبنيه، ونوجّه طلبك إلى عضو يعمل في المجال نفسه.",
+    "howTitle": "كيف تعمل البوابة",
+    "steps": {
+      "submit": {
+        "title": "تصف مشروعك",
+        "body": "عنوان، ونبذة مختصرة، والمجالات التي يمسّها المشروع."
+      },
+      "triage": {
+        "title": "نصنّف الطلب",
+        "body": "يحدّد فريق المشاريع الأولوية والتعقيد ويؤكّد المجالات."
+      },
+      "assign": {
+        "title": "نطابقك مع خبير",
+        "body": "بحسب تقاطع المجالات، وسجلّ المشاريع السابق، وحجم العمل الحالي."
+      },
+      "resolve": {
+        "title": "يُغلق الطلب بنتيجة",
+        "body": "كل حالة تنتهي بنتيجة مسجَّلة وملخّص مكتوب."
+      }
+    },
+    "domainsTitle": "المجالات التي نساعد فيها",
+    "slaPublicNote": "تُراجَع الطلبات الجديدة ضمن مهلة الاستجابة المعتمدة في النادي. وإن تجاوزناها، يُصعَّد الطلب تلقائيًا إلى مدير الفريق.",
+    "startRequest": "ابدأ طلبًا",
+    "myTitle": "استشاراتي",
+    "myLead": "الطلبات التي قدّمتها، والاستشارات التي طُلب منك تقديم المشورة فيها.",
+    "mineTitle": "طلباتي",
+    "invitationsTitle": "بانتظار ردّك",
+    "advisingTitle": "تقدّم المشورة فيها",
+    "emptyMine": "لم تقدّم أي استشارة بعد.",
+    "emptyQueue": "لا يوجد ما ينتظر التصنيف.",
+    "emptyThread": "لا رسائل بعد.",
+    "emptyExpertise": "لم تُسجَّل لك مجالات خبرة بعد.",
+    "newTitle": "استشارة جديدة",
+    "newLead": "كلّما كان وصف المشكلة أدقّ، كانت المطابقة أفضل.",
+    "backToMine": "العودة إلى استشاراتي",
+    "backToQueue": "العودة إلى القائمة",
+    "fieldTitle": "عنوان المشروع",
+    "fieldAbstract": "نبذة",
+    "abstractHint": "ما الذي تبنيه، وما الذي جرّبته، وأين تعثّرت؟",
+    "fieldSupportType": "ما نوع المساعدة التي تحتاجها؟",
+    "fieldDeadline": "الموعد النهائي للمشروع",
+    "fieldSupervisor": "المشرف الأكاديمي",
+    "fieldDomains": "المجالات",
+    "domainsHint": "اختر كل مجال يمسّه المشروع. هذا ما تُبنى عليه المطابقة.",
+    "triageDomainsHint": "اترك الخيارات كما هي للإبقاء على اختيار مُقدِّم الطلب.",
+    "fieldPriority": "الأولوية",
+    "fieldComplexity": "التعقيد",
+    "fieldOutcome": "النتيجة",
+    "fieldSummary": "الملخّص",
+    "summaryHint": "ما الذي قُدِّم من مشورة، وما الخطوة التالية للطالب؟",
+    "submit": "إرسال الطلب",
+    "submitting": "جارٍ الإرسال...",
+    "submitted": "أُرسل الطلب.",
+    "slaNote": "بإرسال الطلب تبدأ مهلة استجابة النادي.",
+    "replyBy": "الردّ متوقَّع بحلول {date}",
+    "threadTitle": "المحادثة",
+    "threadClosed": "هذه الاستشارة مغلقة، فلا يمكن إضافة رسائل جديدة.",
+    "replyLabel": "رسالتك",
+    "send": "إرسال",
+    "sending": "جارٍ الإرسال...",
+    "unknownSender": "مُرسِل غير معروف",
+    "staffTitle": "قائمة الاستشارات",
+    "staffLead": "صنّف الطلبات الواردة، وطابقها مع خبير، وحافظ على مهلة الاستجابة.",
+    "awaitingTitle": "بانتظار إجراء",
+    "inFlightTitle": "قيد المعالجة",
+    "triageTitle": "التصنيف",
+    "triage": "حفظ التصنيف",
+    "triaging": "جارٍ الحفظ...",
+    "matchTitle": "الخبراء المقترحون",
+    "matchLead": "مرتّبون بحسب تقاطع المجالات، ثم سجلّ المشاريع، ثم أقلّ حِمل حالي. الترتيب اقتراح — والقرار لك.",
+    "assign": "إسناد",
+    "atCapacity": "بلغ الحدّ الأقصى",
+    "noCandidates": "لا يوجد عضو متاح يطابق هذه المجالات. وسّع المجالات، أو سجّل الخبرات أولًا.",
+    "overlap": "{count} مجالات متطابقة",
+    "hasEvidence": "له سجلّ مشاريع",
+    "assignmentsTitle": "سجلّ الإسناد",
+    "assignedTo": "مُسنَد إلى {name}",
+    "requester": "مُقدِّم الطلب",
+    "slaDue": "موعد الاستجابة",
+    "slaBreached": "تجاوز مهلة الاستجابة",
+    "accept": "قبول",
+    "decline": "اعتذار",
+    "confirmDecline": "تأكيد الاعتذار",
+    "declineReason": "ما سبب اعتذارك؟",
+    "cancel": "إلغاء",
+    "resolveTitle": "إغلاق الاستشارة",
+    "resolve": "تسجيل النتيجة والإغلاق",
+    "resolving": "جارٍ الإغلاق...",
+    "resolveClosesNote": "الإغلاق ينهي المحادثة — لا يمكن إضافة رسائل بعده.",
+    "expertiseTitle": "مجالات خبرتي",
+    "expertiseLead": "مجالاتك يحدّدها فريق المشاريع. أمّا إتاحتك فهي قرارك.",
+    "available": "متاح",
+    "unavailable": "غير متاح",
+    "toggleFor": "تبديل الإتاحة في {domain}",
+    "loadCap": "حتى {count} في آن واحد",
+    "curationNote": "مستوى التمكّن والحدّ الأقصى المتزامن يحدّدهما فريق المشاريع. أنت تتحكّم فقط بكونك تستقبل استشارات حاليًا أم لا.",
+    "errors": {
+      "AUTH_REQUIRED": "يرجى تسجيل الدخول للمتابعة.",
+      "FORBIDDEN": "لست طرفًا في هذه الاستشارة.",
+      "TITLE_REQUIRED": "العنوان مطلوب.",
+      "DUPLICATE_OPEN_REQUEST": "لديك طلب مفتوح بالعنوان نفسه.",
+      "REQUEST_NOT_FOUND": "لم يعد هذا الطلب موجودًا.",
+      "NOT_TRIAGEABLE": "سبق تصنيف هذا الطلب.",
+      "NOT_ASSIGNABLE": "صنّف الطلب قبل إسناده إلى خبير.",
+      "EXPERT_UNAVAILABLE": "هذا العضو غير متاح حاليًا.",
+      "EXPERT_AT_CAPACITY": "بلغ هذا العضو حدّه الأقصى من الاستشارات المتزامنة.",
+      "ASSIGNMENT_NOT_FOUND": "لم يعد هذا الإسناد موجودًا.",
+      "NOT_YOUR_ASSIGNMENT": "لا يردّ على الإسناد إلا الخبير المعنيّ.",
+      "ASSIGNMENT_NOT_PENDING": "سبق الردّ على هذا الإسناد.",
+      "DECLINE_REASON_REQUIRED": "يرجى ذكر سبب الاعتذار.",
+      "ALREADY_RESOLVED": "هذه الاستشارة منتهية أصلًا.",
+      "OUTCOME_AND_SUMMARY_REQUIRED": "النتيجة والملخّص كلاهما مطلوب.",
+      "EXPERTISE_NOT_FOUND": "لم يعد هذا المجال موجودًا.",
+      "NOT_YOUR_EXPERTISE": "لا يمكنك تغيير إلا إتاحتك أنت.",
+      "INVALID_INPUT": "يرجى مراجعة الحقول والمحاولة مجددًا.",
+      "UNEXPECTED": "حدث خطأ ما. يرجى المحاولة مجددًا."
+    }
+  },
+  "curation": {
+    "title": "دليل الخبرات",
+    "lead": "المجالات التي يقدّم النادي المشورة فيها، ومَن يستطيع تقديمها. المطابقة تقوم على هذا — وبلا خبرات مسجَّلة لا يمكن إسناد أي استشارة.",
+    "domainsTitle": "المجالات",
+    "expertiseTitle": "الخبرات المسجَّلة",
+    "emptyDomains": "لم تُعرَّف أي مجالات بعد.",
+    "emptyExpertise": "لم تُسجَّل خبرات أي عضو بعد.",
+    "addDomain": "إضافة مجال",
+    "addExpertise": "تسجيل خبرة",
+    "code": "الرمز",
+    "nameAr": "الاسم (بالعربية)",
+    "nameEn": "الاسم (بالإنجليزية)",
+    "bothNamesNote": "الاسمان كلاهما مطلوب — المجال المسمّى بلغة واحدة يظهر فارغًا في صفحات اللغة الأخرى.",
+    "member": "العضو",
+    "domain": "المجال",
+    "proficiency": "مستوى التمكّن",
+    "maxLoad": "الحدّ المتزامن",
+    "startsUnavailableNote": "تبدأ الخبرات الجديدة غير متاحة. العضو وحده يعلن أنه يستقبل استشارات.",
+    "needMembersAndDomains": "عرّف مجالًا واحدًا على الأقل، وتأكّد من وجود عضو فعّال، قبل تسجيل الخبرات.",
+    "memberAvailable": "يستقبل استشارات",
+    "memberUnavailable": "لا يستقبل استشارات",
+    "active": "فعّال",
+    "retired": "متوقّف",
+    "remove": "إزالة",
+    "removeFor": "إزالة خبرة {name}",
+    "toggleDomainFor": "تبديل {domain}",
+    "saving": "جارٍ الحفظ...",
+    "errors": {
+      "AUTH_REQUIRED": "يرجى تسجيل الدخول للمتابعة.",
+      "FORBIDDEN": "لا تملك صلاحية تحرير دليل الخبرات.",
+      "DOMAIN_EXISTS": "يوجد مجال بهذا الرمز أصلًا.",
+      "EXPERTISE_EXISTS": "هذا العضو مسجَّل في هذا المجال أصلًا.",
+      "INVALID_INPUT": "يرجى مراجعة الحقول والمحاولة مجددًا.",
+      "UNEXPECTED": "حدث خطأ ما. يرجى المحاولة مجددًا."
     }
   }
 }

@@ -10,6 +10,7 @@ const ROUTES = [
   '',
   '/courses',
   '/projects',
+  '/consultations',
   '/events',
   '/news',
   '/verify',

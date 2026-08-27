@@ -7,7 +7,7 @@
 
 **Project:** HMK AI & Robotics Club Platform — نادي الهمك للذكاء الصنعي والروبوتيك
 **Working directory:** `E:\Full Stack X AI\Final Project`
-**Last updated:** 2026-08-27 (Session 004)
+**Last updated:** 2026-08-27 (Session 006)
 
 ---
 
@@ -80,13 +80,15 @@ A7 generalises A2…A6 (§1.3 of Step 1) — realised as `ADMIN` holding every p
 | **D-10** | **NEW (Session 001).** Supabase Auth owns credentials | `users.password_hash` removed; `users.id` → FK `auth.users(id)`; `token_epoch` retained for JWT invalidation |
 | **D-11** | **NEW (Session 002).** Privileged domain logic lives in the **database**, not in Server Actions | Every user-uncontrollable transition is a `SECURITY DEFINER` function; Server Actions are thin forwarders. **Corollary: SECURITY DEFINER bypasses RLS, so every such function asserts its own authorisation as its first act** — ownership vs `auth.uid()` or `app.has_perm()`. That assertion IS the boundary; a function added without one is a hole |
 | **D-12** | **NEW (Session 002).** BR-05's evaluation half is an **A2 attestation**; there is no evaluations entity | Step 1 §3 = "marked passed by A2"; Step 2 §B.1 = "Domain service", not a table. M4's assessment tables bind to `applications`, not `enrollments`. `mark_enrollment_completed` takes an explicit boolean; `false` fails the rule exactly as short attendance does. **Do not add an evaluations table without a new D- decision** |
-| **D-13** | **NEW (Session 002).** **Row scoping is not column scoping** | A table holding columns its row-owner must not write gets a **column-level GRANT** or an **RPC-only write path**. Learned from two real flaws: `attempt_answers.awarded_score` (self-grading) and `users.email` (contributor credits) |
+| **D-13** | **NEW (Session 002).** **Row scoping is not column scoping** | A table holding columns its row-owner must not write gets a **column-level GRANT** or an **RPC-only write path**. Learned from **four** real flaws: `attempt_answers.awarded_score` (self-grading), `users.email` (contributor credits), `liability_records` waiver actor, and `consultation_messages` (a `WITH CHECK` that validated the sender COLUMN but never the thread — any signed-in user could inject messages into any private consultation). The recurring tell is a check that validates a **column** rather than the row's **relationship** |
 | **D-14** | **NEW (Session 002).** Lock order is **cohort → application**, always | `respond_to_offer` originally inverted it against the seat allocator — a deadlock under concurrent load. Any future function touching both tables must use this order |
 | **D-15** | **NEW (Session 002).** A question used by an `ACTIVE`/`LOCKED` test is **frozen** | Editing it would silently rewrite a live exam and invalidate graded attempts. Trigger refuses; `clone_question_as_new_version()` is the sanctioned route |
 | **D-16** | **NEW (Session 003).** Every business rule ships with a **committed adversarial test** | Rules live in `supabase/tests/` and run on `npm run test:db` / `npm run verify`. A rule verified once by an ad-hoc probe is anecdote, not verification. **Each test MUST end with `raise exception 'ALL_..._PASSED'`** so the transaction aborts and no row persists; the runner treats a clean return as a FAILURE precisely to catch a test that commits |
 | **D-17** | **NEW (Session 003).** Custody and liability tables are **RPC-write-only** | `checkouts`, `checkout_lines`, `liability_records` have **no staff write policies**. All mutation goes through `issue_checkout` / `check_in_line` / `resolve_liability`, which assert BR-06/07/12/13. A hand-edit that skips `resolve_liability()` skips BR-06 with it — proven possible before this change. Catalogue tables keep ordinary staff CRUD (bookkeeping, not custody state) |
 | **D-18** | **NEW (Session 004).** **Separation of duties on requisitions** — A4 raises, A3 approves | Ruled by the club: Logistics holds the truth of physical stock, so they decide. Enforced on **IDENTITY, not role**: `approve_requisition` / `reject_requisition` refuse when reviewer = requester, **admins included** — an ADMIN holds every permission and would otherwise defeat the control. Raising requires **no M5 permission at all**, only ownership of the context (project membership). That asymmetry IS the separation |
 | **D-19** | **NEW (Session 004).** `media_assets.content_hash` + `hash_algorithm` added — the RR-4 mitigation | Part D.3 names this mitigation explicitly ("versioned bucket + content hash stored on media_assets"), so it is an **anticipated** addition, not an invention — but Rules of Engagement #1 still requires it recorded. **Entity count unchanged: 78 tables**, two columns on an existing one. Paired with a write-once trigger: once an asset backs a certificate its `storage_key`/`content_hash` cannot change and it cannot be deleted |
+| **D-20** | **NEW (Session 005).** **An RLS policy that subqueries another table is subject to THAT table's RLS.** Participation predicates live in a `SECURITY DEFINER` helper, never in a policy subquery | Proven on M2: `consultation_requests.self_consultations` granted access to an assigned expert via `EXISTS (SELECT 1 FROM consultation_assignments ...)`, but `consultation_assignments` had no self-read policy, so the subquery returned nothing and the branch was **dead for everyone**. A policy that reads as if it grants access and grants none is worse than a missing policy, because review passes it. `app.is_consultation_participant(uuid)` is the single predicate; it takes **no user id**, only `auth.uid()`, so it cannot be used to probe anyone else |
+| **D-21** | **NEW (Session 005).** A counterpart's **display name** is disclosed by a narrow definer function, never by widening a row policy on `users` | `users.self_read_profile` scopes reads to `id = app.uid()`, so a join from a consultation thread rendered every counterpart message unattributed — proven. The fix is `get_consultation_participants(uuid)`: names only, participants only. A row policy would have exposed the whole `users` row (email included) to satisfy a need for one string. Same shape as the 0007 contributor-credits fix |
 
 ### Residual risks (from Part D.3)
 | # | Risk | Status |
@@ -298,20 +300,21 @@ Work cycles through five personas; each hands off explicitly.
 
 ## 13. Current Status
 
-**Last updated: end of Session 004 (2026-08-27).** Journal: `journals/2026-08-27-session-004.md`
+**Last updated: end of Session 006 (2026-08-27).** Journal: `journals/2026-08-27-session-004.md`
+> Sessions 005 (frontend verification) and 006 (M2) have not had journals written yet.
 
 ### Live system
 | Artifact | Status |
 |---|---|
 | Supabase project | `hgzuiowjxjmyelelzybn` — us-west-2, PG 17.6.1, ACTIVE_HEALTHY |
-| Live inventory | **78 tables / 7 views / 371 policies / 50 functions / 0 tables without RLS** |
+| Live inventory | **78 tables / 7 views / 375 policies / 60 functions / 0 tables without RLS** |
 | Entity reconciliation | schema.sql **78** = live **78** = §5 sum **78**. **Unchanged since freeze** (D-19 added columns, not tables) |
-| Migrations | 19 files on disk |
-| Schedulers | `hmk-br04-expire-offers` (15 min) · `hmk-rr1-release-reservations` (hourly) |
+| Migrations | 22 files on disk |
+| Schedulers | `hmk-br04-expire-offers` (15 min) · `hmk-rr1-release-reservations` (hourly) · `hmk-br08-escalate-sla` (20 min) |
 | Storage | `media` (public), `certificates` (private, **no client policy** — RR-4), `evidence` (private) |
 | Demo data | **None.** 1 user (ADMIN); 0 everywhere else |
 | Auth | min 8, lower+upper+digits, reauth on password change. **HIBP unavailable — Pro plan only** |
-| **Version control** | ✅ **`github.com/malek-shammout/Hamak-AI-Robotics-Club-Platform`** — 12 commits, in sync, 175 files. No secrets in tree **or history** |
+| **Version control** | ✅ **`github.com/malek-shammout/Hamak-AI-Robotics-Club-Platform`** — 14 commits. No secrets in tree **or history** |
 
 ### Modules
 | Module | State |
@@ -323,11 +326,12 @@ Work cycles through five personas; each hands off explicitly.
 | M4 Assessment | ✅ attempts, auto-grading, question bank, manual grading, readiness |
 | M5 Hardware Custody | ✅ requisitions (D-18), reservation (RR-1), issue/check-in/liability, A3 desk |
 | M6 Clearance & Certification | ✅ §B.2 evaluation, approval, issuance, **PDF + signed URLs (RR-4)** |
-| **M2 Consultations** | ⛔ **not started — the last unbuilt module** |
+| **M2 Consultations** | ✅ **BUILT (S006)** — public gateway, request/thread, AD-7 triage + expert matching, BR-08 SLA escalation, D-06 curation + member availability |
 | M7 / M8 / M9 authoring | ⛔ public read only; no staff authoring UI |
 
-**The student lifecycle is closed end to end**, and team/event custody is now reachable
-via the requisition flow.
+**All ten modules now have a working path**; M7/M8/M9 still lack staff authoring UI.
+The student lifecycle is closed end to end, custody is reachable via the requisition
+flow, and the graduation-project gateway is open.
 
 ### Residual risks — final state
 | Risk | Status |
@@ -338,26 +342,38 @@ via the requisition flow.
 | RR-4 document immutability | ✅ **CLOSED (S004)** |
 | RR-5 Arabic full-text search | ⚠️ **Only one left** — unevaluated Phase-2 item, not a defect |
 
-### Test suite — `npm run test:db` → **10/10**
+### Test suite — **12 files**
 01 BR-01 · 02 M3 offers · 03 BR-02/03/04 · 04 M4 assessment (**self-grading guard**) ·
 05 M4 grading + D-15 · 06 BR-05 + D-12 · 07 M5 custody (**waiver guard**) ·
-08 M6 full lifecycle · 09 requisitions + RR-1 · 10 RR-4 immutability
+08 M6 full lifecycle · 09 requisitions + RR-1 · 10 RR-4 immutability ·
+11 M2 consultations (**message-injection guard**, BR-08, D-06) · 12 M2 expertise curation (D-06)
 
 Every test aborts its transaction; nothing persists (row-counted after).
+
+> **Honest note on 11 and 12 (S006):** they were executed against the live database
+> via the Management API and both returned their `ALL_..._PASSED` sentinel, but they
+> have **not** been run through `scripts/run-db-tests.mjs`, which needs
+> `SUPABASE_ACCESS_TOKEN` / `SUPABASE_PROJECT_REF` in the environment. Run
+> `npm run test:db` once with those set to confirm all 12 together.
 
 ### Verification status — honest
 | Check | Status |
 |---|---|
 | All BR-01…BR-13, RR-1, RR-4 | ✅ **Adversarially tested**, each rolled back |
 | Certificate render + Arabic shaping | ✅ **Verified visually** — PDF rendered and inspected |
-| `tsc --noEmit` · `next build` | ✅ exit 0 · 38 route files |
-| Message catalogues | ✅ balanced, **645 keys each** |
-| **Storage upload + attach path** | ❌ **NOT verified** — needs `SUPABASE_SERVICE_ROLE_KEY` |
-| **Signed-in flows in a browser** | ❌ **NOT VERIFIED — open since Session 002** |
-| **Frontend unit / E2E tests** | ❌ vitest has nothing to run |
+| `tsc --noEmit` · `next build` | ✅ exit 0 · 46 route files |
+| Message catalogues | ✅ balanced, **815 keys each** (parity asserted on every edit) |
+| Storage upload + attach path | ✅ **Verified (S005)** — 8 checks incl. byte round-trip + re-hash |
+| Public + guard flows in a browser | ✅ **Playwright, 120 passing** (chromium + mobile-RTL) |
+| **Signed-in flows** | ⚠️ **specs written, never run** — `e2e/auth/*` skips without `E2E_EMAIL`/`E2E_PASSWORD` (42 skipped) |
+| M2 pages in a real browser | ✅ both locales, RTL/LTR, toggle keeps route + query, no overflow at 375px |
+| **Frontend unit tests** | ❌ still none — but `npm run test` now **passes** instead of failing. `vitest.config.ts` added (S006): the default glob was sweeping up `e2e/**`, whose specs import `@playwright/test` and throw outside a Playwright runner, so `npm run test` reported **10 failed suites / 0 tests** from the moment Session 005 created `e2e/` |
+| `npm run i18n:check` | ✅ **fixed (S006)** — `scripts/check-translations.mjs` was referenced by `package.json` for four sessions but **never existed**, so the bilingual gate silently never ran. Written; now asserts key parity AND ICU placeholder parity. 815 keys, clean |
+| **`npm run lint`** | ❌ **BROKEN, pre-existing** — `next lint` was removed in Next 16, and there is no ESLint config in the repo. `eslint-config-next@16` also fails to load through `FlatCompat` on ESLint 9. **`npm run verify` therefore cannot pass end to end**; the individual steps do |
 
-> The database is exhaustively covered. **The frontend has no automated coverage at
-> all.** Every new module widens that asymmetry.
+> The database is exhaustively covered. The frontend now has **broad public E2E
+> coverage**, but **no signed-in run and no component tests** — M2's forms, like every
+> other module's, have never been exercised by an automated test with a session.
 
 ### Deploy prerequisites
 1. `SUPABASE_SERVICE_ROLE_KEY` in the deploy environment — the `certificates` bucket has
@@ -365,11 +381,15 @@ Every test aborts its transaction; nothing persists (row-counted after).
 2. `npx playwright install chromium` — else `issueCertificateDocument` returns
    `RENDERER_UNAVAILABLE`.
 
-### Next session — club to choose
-- **A. M2 Consultations** — BR-08 SLA triage, D-06 curated expertise, expert matching,
-  message thread. Completes Pillar 1.
-- **B. Frontend verification** — vitest components, Playwright E2E over signed-in paths,
-  a manual click-through. **Recommended first:** the coverage asymmetry only grows.
+### Next session
+1. **Run the signed-in E2E specs.** They exist and have never executed. Needs a test
+   account's `E2E_EMAIL` / `E2E_PASSWORD` in the environment — a human must create it;
+   tooling does not create auth identities.
+2. **Seed the expertise catalogue with the club.** M2 is built but *inert* until A4
+   records real fields and real member expertise at `/staff/expertise`; `suggest_experts`
+   ranks over `member_expertise` and returns nothing while it is empty.
+3. **M7 / M8 / M9 staff authoring UI** — the last structural gap.
+4. Journals for Sessions 005 and 006.
 
 ### Open questions for the club
 - Exact lat/lng for the club pin *(open)*.
@@ -378,6 +398,7 @@ Every test aborts its transaction; nothing persists (row-counted after).
 - Upgrade to Supabase Pro to enable leaked-password protection?
 - **(D-12)** Is an evaluations entity ever wanted?
 - Should `project_bom_lines` stay staff-only?
+- **(M2)** What are the club's actual expertise fields, and who advises in each? *(open)*
 
 ---
 
@@ -385,6 +406,14 @@ Every test aborts its transaction; nothing persists (row-counted after).
 
 | Date | Change |
 |---|---|
+| 2026-08-27 | **Club ruled on both M2 open questions.** BR-08 SLA stays at **48h** — reasonable for student volunteers. AD-7 duplicate handling stays **strict**: a duplicate open request with the same title is REFUSED, not merely warned, because the club judged refusing safer than advising. The frozen workflow says "warn", so this is a deliberate, recorded departure — do not "fix" `DUPLICATE_OPEN_REQUEST` back to advisory without a new ruling |
+| 2026-08-27 | **Two silently-broken links in the verification gate, found by running it.** `scripts/check-translations.mjs` was wired into `package.json` but never written, so the bilingual check had never run once; and vitest's default glob swept in `e2e/**`, so `npm run test` had reported 10 failed suites since Session 005. Both fixed. `npm run lint` remains broken — `next lint` is gone in Next 16 and the repo has no ESLint config |
+| 2026-08-27 | **M2 built. A fifth pre-build RLS audit found a fifth exploitable flaw — and it was the worst of them.** `participants_send_messages` checked only `sender_user_id = auth.uid()` and never the thread, so **any signed-in user could inject messages into any private consultation**. Proven by posting a payment-fraud lure into a stranger's thread. The read policy beside it was correctly scoped, which is exactly why it looked safe. Migration 0022 |
+| 2026-08-27 | **D-20 — a policy that subqueries another table is subject to that table's RLS.** Found by running the M2 test, not by reading: legitimate participants could not post. `consultation_assignments` had no self-read policy, so the expert branch of `self_consultations` was **dead for everyone** while reading as if it granted access. Replaced with `app.is_consultation_participant()`. Migration 0023 |
+| 2026-08-27 | **D-21 — participants could not see each other's names.** Proven: the student's join to `users` returned NULL and every expert message would have rendered unattributed. Fixed with a narrow definer function (names only, participants only) rather than widening a row policy on `users`, which would have exposed email. Migration 0024 |
+| 2026-08-27 | M2 domain: `submit_consultation_request` (BR-08 clock), `triage_consultation`, `suggest_experts` (AD-7 ranking), `assign_consultation_expert` (availability + `max_concurrent_load` re-checked), `respond_to_assignment`, `resolve_consultation` (outcome + summary mandatory), `escalate_sla_breaches` on `hmk-br08-escalate-sla` (*/20) |
+| 2026-08-27 | **M2 shipped inert and I caught it in the browser, not in code.** `expertise_domains` and `member_expertise` were empty and nothing could curate them, so `suggest_experts` could never return a candidate. Added the A4 curation screen `/staff/expertise`; proved A4's existing grants suffice and that candidates go 0 → 1 only when the member opts in (test 12) |
+| 2026-08-27 | Tests 11 and 12 committed. Home CTA restored to `/consultations`; header nav gained it. E2E grew to **120 passing** with the new public route and six new guard assertions |
 | 2026-08-25 | RR-3 confirmed by club: consumables excluded from BR-01 return obligation |
 | 2026-08-26 | D-09 added — BR-01 lock made declarative via composite FK (closes RR-2) |
 | 2026-08-26 | D-10 added — Supabase Auth owns credentials; `password_hash` dropped from `users` |

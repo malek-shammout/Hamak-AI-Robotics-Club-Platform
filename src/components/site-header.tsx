@@ -18,6 +18,7 @@ export async function SiteHeader({locale}: {locale: Locale}) {
   const links = [
     {href: '/courses', label: t('courses')},
     {href: '/projects', label: t('projects')},
+    {href: '/consultations', label: t('consultations')},
     {href: '/events', label: t('events')},
     {href: '/news', label: t('news')},
   ] as const;

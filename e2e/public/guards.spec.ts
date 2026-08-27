@@ -8,6 +8,9 @@ const GUARDED = [
   '/me/applications',
   '/me/enrollments',
   '/me/certificates',
+  '/me/consultations',
+  '/me/consultations/new',
+  '/me/expertise',
   '/staff/cohorts',
   '/staff/questions',
   '/staff/grading',
@@ -17,6 +20,8 @@ const GUARDED = [
   '/staff/liabilities',
   '/staff/assets',
   '/staff/requisitions',
+  '/staff/consultations',
+  '/staff/expertise',
 ] as const;
 
 for (const route of GUARDED) {

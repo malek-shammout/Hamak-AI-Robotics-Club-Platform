@@ -4207,6 +4207,14 @@ export type Database = {
         }
         Returns: Json
       }
+      assign_consultation_expert: {
+        Args: {
+          p_expert_user_id: string
+          p_request_id: string
+          p_response_hours?: number
+        }
+        Returns: string
+      }
       attach_certificate_document: {
         Args: {
           p_byte_size: number
@@ -4239,6 +4247,7 @@ export type Database = {
         Args: { p_application_id: string }
         Returns: number
       }
+      escalate_sla_breaches: { Args: never; Returns: Json }
       evaluate_clearance: { Args: { p_enrollment_id: string }; Returns: Json }
       evaluate_completion_readiness: {
         Args: { p_enrollment_id: string }
@@ -4260,6 +4269,14 @@ export type Database = {
           saved_payload: Json
           stem: string
           weight: number
+        }[]
+      }
+      get_consultation_participants: {
+        Args: { p_request_id: string }
+        Returns: {
+          full_name_ar: string
+          full_name_en: string
+          user_id: string
         }[]
       }
       grade_attempt_answer: {
@@ -4318,6 +4335,14 @@ export type Database = {
         Returns: undefined
       }
       release_expired_reservations: { Args: never; Returns: Json }
+      resolve_consultation: {
+        Args: {
+          p_outcome: Database["public"]["Enums"]["consultation_outcome"]
+          p_request_id: string
+          p_summary: string
+        }
+        Returns: undefined
+      }
       resolve_liability: {
         Args: {
           p_liability_id: string
@@ -4326,6 +4351,14 @@ export type Database = {
           p_status: Database["public"]["Enums"]["liability_status"]
         }
         Returns: undefined
+      }
+      respond_to_assignment: {
+        Args: {
+          p_accept: boolean
+          p_assignment_id: string
+          p_decline_reason?: string
+        }
+        Returns: string
       }
       respond_to_offer: {
         Args: { p_accept: boolean; p_application_id: string }
@@ -4341,6 +4374,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_expertise_availability: {
+        Args: { p_expertise_id: string; p_is_available: boolean }
+        Returns: undefined
+      }
       start_test_attempt: {
         Args: { p_application_id: string }
         Returns: string
@@ -4349,7 +4386,41 @@ export type Database = {
         Args: { p_background?: Json; p_cohort_id: string }
         Returns: string
       }
+      submit_consultation_request: {
+        Args: {
+          p_abstract: string
+          p_domain_ids?: string[]
+          p_project_deadline_on?: string
+          p_supervisor_name?: string
+          p_support_type: Database["public"]["Enums"]["consultation_support_type"]
+          p_title: string
+          p_university_id?: string
+        }
+        Returns: string
+      }
       submit_test_attempt: { Args: { p_attempt_id: string }; Returns: Json }
+      suggest_experts: {
+        Args: { p_request_id: string }
+        Returns: {
+          current_load: number
+          domain_overlap: number
+          expert_user_id: string
+          full_name_ar: string
+          full_name_en: string
+          has_evidence: boolean
+          is_available: boolean
+          max_concurrent_load: number
+        }[]
+      }
+      triage_consultation: {
+        Args: {
+          p_complexity: Database["public"]["Enums"]["consultation_complexity"]
+          p_domain_ids?: string[]
+          p_priority: Database["public"]["Enums"]["consultation_priority"]
+          p_request_id: string
+        }
+        Returns: undefined
+      }
       verify_certificate: {
         Args: { p_code: string }
         Returns: {

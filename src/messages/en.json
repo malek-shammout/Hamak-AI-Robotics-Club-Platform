@@ -24,7 +24,8 @@
     "statsCourses": "Courses",
     "statsProjects": "Projects",
     "statsMembers": "Members",
-    "ctaSecondaryProjects": "Browse projects"
+    "ctaSecondaryProjects": "Browse projects",
+    "ctaSecondaryConsultations": "Graduation Project Gateway"
   },
   "location": {
     "heading": "Club location",
@@ -151,6 +152,50 @@
       "MECHANICAL": "Mechanical",
       "ML": "Machine learning",
       "DOCUMENTATION": "Documentation"
+    },
+    "supportType": {
+      "TECHNICAL_ADVICE": "Technical advice",
+      "COMPONENT_SELECTION": "Component selection",
+      "CODE_REVIEW": "Code review",
+      "MENTORSHIP": "Mentorship",
+      "OTHER": "Other"
+    },
+    "consultationStatus": {
+      "NEW": "New",
+      "TRIAGED": "Triaged",
+      "ASSIGNED": "Assigned",
+      "IN_PROGRESS": "In progress",
+      "RESOLVED": "Resolved",
+      "REJECTED": "Rejected",
+      "ESCALATED": "Escalated"
+    },
+    "consultationPriority": {
+      "LOW": "Low",
+      "NORMAL": "Normal",
+      "HIGH": "High"
+    },
+    "consultationComplexity": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High"
+    },
+    "consultationOutcome": {
+      "ADVICE_GIVEN": "Advice given",
+      "ONGOING_MENTORSHIP": "Ongoing mentorship",
+      "OUT_OF_SCOPE": "Out of scope",
+      "UNRESPONSIVE": "Requester unresponsive"
+    },
+    "assignmentState": {
+      "PENDING_ACCEPTANCE": "Awaiting your answer",
+      "ACCEPTED": "Accepted",
+      "DECLINED": "Declined",
+      "NO_RESPONSE": "No response",
+      "RELEASED": "Released"
+    },
+    "proficiency": {
+      "FAMILIAR": "Familiar",
+      "PROFICIENT": "Proficient",
+      "EXPERT": "Expert"
     }
   },
   "auth": {
@@ -771,6 +816,162 @@
       "REJECTION_REASON_REQUIRED": "A rejection reason is required.",
       "INVALID_INPUT": "Invalid input.",
       "UNEXPECTED": "Something went wrong."
+    }
+  },
+  "consultations": {
+    "publicTitle": "Graduation Project Gateway",
+    "publicLead": "Bring your graduation project to the club. Describe what you are building, and we route it to a member who works in that field.",
+    "howTitle": "How it works",
+    "steps": {
+      "submit": {
+        "title": "You describe the project",
+        "body": "Title, a short abstract, and the fields it touches."
+      },
+      "triage": {
+        "title": "We classify it",
+        "body": "The projects team sets priority and complexity, and confirms the fields."
+      },
+      "assign": {
+        "title": "We match an expert",
+        "body": "Ranked by overlap with your fields, prior project evidence, and current workload."
+      },
+      "resolve": {
+        "title": "It closes with an outcome",
+        "body": "Every case ends with a recorded outcome and a written summary."
+      }
+    },
+    "domainsTitle": "Fields we can help with",
+    "slaPublicNote": "New requests are reviewed within the club's published response window. If we miss it, the request escalates to the team manager automatically.",
+    "startRequest": "Start a request",
+    "myTitle": "My consultations",
+    "myLead": "Requests you have raised, and consultations you have been asked to advise on.",
+    "mineTitle": "My requests",
+    "invitationsTitle": "Awaiting your answer",
+    "advisingTitle": "You are advising",
+    "emptyMine": "You have not raised a consultation yet.",
+    "emptyQueue": "Nothing is waiting to be classified.",
+    "emptyThread": "No messages yet.",
+    "emptyExpertise": "No expertise has been recorded for you yet.",
+    "newTitle": "New consultation",
+    "newLead": "The more precisely you describe the problem, the better the match.",
+    "backToMine": "Back to my consultations",
+    "backToQueue": "Back to the queue",
+    "fieldTitle": "Project title",
+    "fieldAbstract": "Abstract",
+    "abstractHint": "What are you building, what have you tried, and where are you stuck?",
+    "fieldSupportType": "What kind of help do you need?",
+    "fieldDeadline": "Project deadline",
+    "fieldSupervisor": "Academic supervisor",
+    "fieldDomains": "Fields",
+    "domainsHint": "Pick every field the project touches. This drives the expert match.",
+    "triageDomainsHint": "Leave every box as it is to keep the requester's own selection.",
+    "fieldPriority": "Priority",
+    "fieldComplexity": "Complexity",
+    "fieldOutcome": "Outcome",
+    "fieldSummary": "Summary",
+    "summaryHint": "What was advised, and what should the student do next?",
+    "submit": "Submit request",
+    "submitting": "Submitting...",
+    "submitted": "Request submitted.",
+    "slaNote": "Submitting starts the club's response clock.",
+    "replyBy": "Reply expected by {date}",
+    "threadTitle": "Conversation",
+    "threadClosed": "This consultation is closed, so no further messages can be added.",
+    "replyLabel": "Your message",
+    "send": "Send",
+    "sending": "Sending...",
+    "unknownSender": "Unknown sender",
+    "staffTitle": "Consultation queue",
+    "staffLead": "Classify incoming requests, match an expert, and keep the response clock honest.",
+    "awaitingTitle": "Awaiting action",
+    "inFlightTitle": "In flight",
+    "triageTitle": "Classify",
+    "triage": "Save classification",
+    "triaging": "Saving...",
+    "matchTitle": "Suggested experts",
+    "matchLead": "Ranked by field overlap, then prior project evidence, then lowest current workload. The ranking is advice — you choose.",
+    "assign": "Assign",
+    "atCapacity": "At capacity",
+    "noCandidates": "No available member matches these fields. Widen the fields, or curate expertise first.",
+    "overlap": "{count} matching fields",
+    "hasEvidence": "Has project evidence",
+    "assignmentsTitle": "Assignment history",
+    "assignedTo": "Assigned to {name}",
+    "requester": "Requester",
+    "slaDue": "Response due",
+    "slaBreached": "Response window missed",
+    "accept": "Accept",
+    "decline": "Decline",
+    "confirmDecline": "Confirm decline",
+    "declineReason": "Why are you declining?",
+    "cancel": "Cancel",
+    "resolveTitle": "Close this consultation",
+    "resolve": "Record outcome and close",
+    "resolving": "Closing...",
+    "resolveClosesNote": "Closing ends the conversation — no further messages can be added afterwards.",
+    "expertiseTitle": "My expertise",
+    "expertiseLead": "Your fields are curated by the projects team. Your availability is yours.",
+    "available": "Available",
+    "unavailable": "Unavailable",
+    "toggleFor": "Toggle availability for {domain}",
+    "loadCap": "Up to {count} at a time",
+    "curationNote": "Proficiency and the concurrent limit are set by the projects team. You control only whether you are currently taking consultations.",
+    "errors": {
+      "AUTH_REQUIRED": "Please sign in to continue.",
+      "FORBIDDEN": "You are not a participant in this consultation.",
+      "TITLE_REQUIRED": "A title is required.",
+      "DUPLICATE_OPEN_REQUEST": "You already have an open request with this title.",
+      "REQUEST_NOT_FOUND": "That consultation no longer exists.",
+      "NOT_TRIAGEABLE": "This request has already been classified.",
+      "NOT_ASSIGNABLE": "Classify the request before assigning an expert.",
+      "EXPERT_UNAVAILABLE": "That member is not currently available.",
+      "EXPERT_AT_CAPACITY": "That member is already at their concurrent limit.",
+      "ASSIGNMENT_NOT_FOUND": "That assignment no longer exists.",
+      "NOT_YOUR_ASSIGNMENT": "Only the named expert can answer this assignment.",
+      "ASSIGNMENT_NOT_PENDING": "This assignment has already been answered.",
+      "DECLINE_REASON_REQUIRED": "Please say why you are declining.",
+      "ALREADY_RESOLVED": "This consultation is already closed.",
+      "OUTCOME_AND_SUMMARY_REQUIRED": "Both an outcome and a summary are required.",
+      "EXPERTISE_NOT_FOUND": "That expertise entry no longer exists.",
+      "NOT_YOUR_EXPERTISE": "You can only change your own availability.",
+      "INVALID_INPUT": "Please check the form and try again.",
+      "UNEXPECTED": "Something went wrong. Please try again."
+    }
+  },
+  "curation": {
+    "title": "Expertise catalogue",
+    "lead": "Fields the club advises in, and which members can advise in them. Matching runs on this — with nothing curated, no consultation can be assigned.",
+    "domainsTitle": "Fields",
+    "expertiseTitle": "Curated expertise",
+    "emptyDomains": "No fields have been defined yet.",
+    "emptyExpertise": "No member expertise has been recorded yet.",
+    "addDomain": "Add a field",
+    "addExpertise": "Record expertise",
+    "code": "Code",
+    "nameAr": "Name (Arabic)",
+    "nameEn": "Name (English)",
+    "bothNamesNote": "Both names are required — a field named in only one language renders blank on the other locale's pages.",
+    "member": "Member",
+    "domain": "Field",
+    "proficiency": "Proficiency",
+    "maxLoad": "Concurrent limit",
+    "startsUnavailableNote": "New entries start unavailable. Only the member can mark themselves as taking consultations.",
+    "needMembersAndDomains": "Define at least one field, and make sure there is an active member, before recording expertise.",
+    "memberAvailable": "Taking consultations",
+    "memberUnavailable": "Not taking consultations",
+    "active": "Active",
+    "retired": "Retired",
+    "remove": "Remove",
+    "removeFor": "Remove expertise for {name}",
+    "toggleDomainFor": "Toggle {domain}",
+    "saving": "Saving...",
+    "errors": {
+      "AUTH_REQUIRED": "Please sign in to continue.",
+      "FORBIDDEN": "You do not have permission to curate expertise.",
+      "DOMAIN_EXISTS": "A field with that code already exists.",
+      "EXPERTISE_EXISTS": "That member is already recorded in this field.",
+      "INVALID_INPUT": "Please check the form and try again.",
+      "UNEXPECTED": "Something went wrong. Please try again."
     }
   }
 }
