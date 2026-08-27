@@ -35,3 +35,6 @@ next-env.d.ts
 # Claude Code local state (.claude/commands and launch.json stay tracked)
 .claude/settings.local.json
 .claude/worktrees/
+
+# Playwright storage state — contains a LIVE session token. Never commit.
+e2e/.auth/

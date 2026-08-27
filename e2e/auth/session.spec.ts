@@ -2,6 +2,20 @@ import {test, expect, hasCredentials, SKIP_REASON, signIn} from './fixtures';
 
 test.skip(!hasCredentials, SKIP_REASON);
 
+/**
+ * These specs sign in and out for real, against ONE shared account, and sign-out is
+ * global by club ruling (D-24) — it revokes every session for that user. So they must
+ * not run beside each other: the sign-out spec would kill the sessions the reload and
+ * language-switch specs are relying on, and the failures read exactly like a
+ * session-persistence bug in the product. It is not one; it is the tests racing.
+ *
+ * `mode: 'default'` runs them in order without the fail-fast behaviour of `'serial'`,
+ * which would skip the remaining specs after one failure and hide a second defect.
+ * The two session projects are additionally chained in playwright.config.ts so they
+ * cannot overlap with each other either.
+ */
+test.describe.configure({mode: 'default'});
+
 test('signing in reaches the member area and the header reflects it', async ({page}) => {
   await signIn(page);
 
@@ -26,7 +40,11 @@ test('the session survives a language switch', async ({page}) => {
   await page.goto('/en/me/applications');
   await page.getByRole('button', {name: /العربية/i}).click();
 
-  await expect(page).toHaveURL(/\/ar\/me\/applications$/);
+  // The toggle navigates client-side, which costs a server round-trip for the RSC
+  // payload of a guarded page. Under the full suite — 8 workers against one server —
+  // that can exceed Playwright's 5s default, and it failed there while passing in
+  // isolation. The assertion is unchanged; only the patience is.
+  await expect(page).toHaveURL(/\/ar\/me\/applications$/, {timeout: 20_000});
   await expect(page).not.toHaveURL(/\/login/);
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
 });

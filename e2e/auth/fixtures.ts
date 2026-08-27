@@ -1,20 +1,22 @@
 import {test as base, expect, type Page} from '@playwright/test';
+import path from 'node:path';
 
 /**
  * Fixtures for the signed-in specs.
  *
- * THESE SPECS MUST RUN ON A SINGLE WORKER — `npm run test:e2e:auth` passes
- * `--workers=1`, and `npm run test:e2e` runs them as a separate serial pass.
+ * SIGN-OUT IS GLOBAL (D-24), so any spec that signs out revokes EVERY session for the
+ * account — including the shared one saved by auth.setup.ts. That is why:
  *
- * Why: every spec here shares ONE account, and `supabase.auth.signOut()` defaults to
- * `scope: 'global'` — it revokes every session for that user, on every device. Run in
- * parallel, the sign-out spec therefore kills the sessions of the reload and
- * language-switch specs mid-flight, and they fail looking exactly like a session-
- * persistence bug in the product. It is not one: the same five specs pass 5/5 serially
- * and 3/5 in parallel.
+ *   - read-only specs (member, staff) reuse the stored session and never sign out;
+ *   - the session-lifecycle specs run in a LATER project, on a single worker, and do
+ *     their own sign-ins.
+ *
+ * Run in parallel against one shared account, the sign-out spec kills its neighbours
+ * mid-flight and they fail looking exactly like a session-persistence bug in the
+ * product. It is not one: the same five specs passed 5/5 serially and 3/5 in parallel.
  *
  * Do not "fix" a future failure here by relaxing the session assertions. Check the
- * worker count first.
+ * project ordering and worker count first.
  *
  * These need a real account. Creating one is not something the tooling does — an auth
  * identity is a credential and credentials belong to the club — so the credentials come
@@ -24,6 +26,9 @@ import {test as base, expect, type Page} from '@playwright/test';
  * green because it quietly tested nothing is worse than one that does not run: it
  * reports safety that was never established.
  */
+/** Where auth.setup.ts stores the shared session. Gitignored — it holds a live token. */
+export const STORAGE_STATE = path.join(__dirname, '../.auth/staff.json');
+
 export const E2E_EMAIL = process.env.E2E_EMAIL;
 export const E2E_PASSWORD = process.env.E2E_PASSWORD;
 export const hasCredentials = Boolean(E2E_EMAIL && E2E_PASSWORD);
@@ -47,9 +52,20 @@ export async function signIn(page: Page, locale: 'ar' | 'en' = 'en') {
   await expect(page).not.toHaveURL(/\/login/, {timeout: 15_000});
 }
 
+/**
+ * The signed-in page.
+ *
+ * This used to sign in per test. It no longer does: the `authed-*` Playwright projects
+ * load the session saved once by auth.setup.ts, so the page arrives already
+ * authenticated. Sixty-odd password grants per run was exceeding Supabase's auth rate
+ * limit, and the rejections looked like a broken login page rather than a throttled one.
+ *
+ * Specs that exercise sign-in or sign-out THEMSELVES must not use this fixture — they
+ * call `signIn()` directly and run in a later project, because sign-out is global (D-24)
+ * and would revoke this shared session for everyone.
+ */
 export const test = base.extend<{signedIn: Page}>({
   signedIn: async ({page}, use) => {
-    await signIn(page);
     await use(page);
   },
 });

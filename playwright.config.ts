@@ -1,4 +1,8 @@
 import {defineConfig, devices} from '@playwright/test';
+import path from 'node:path';
+
+/** Shared session written by e2e/auth/auth.setup.ts. Gitignored — holds a live token. */
+const AUTH_STATE = path.join(__dirname, 'e2e/.auth/staff.json');
 
 /**
  * E2E configuration.
@@ -28,10 +32,50 @@ export default defineConfig({
   },
 
   projects: [
-    {name: 'chromium', use: {...devices['Desktop Chrome']}},
+    // ---------------------------------------------------------------- public
+    {name: 'chromium', testDir: './e2e/public', use: {...devices['Desktop Chrome']}},
     // Arabic is the default locale and RTL is where layout bugs hide, so a mobile
     // viewport is not optional decoration here.
-    {name: 'mobile-rtl', use: {...devices['Pixel 7'], locale: 'ar'}},
+    {name: 'mobile-rtl', testDir: './e2e/public', use: {...devices['Pixel 7'], locale: 'ar'}},
+
+    // ---------------------------------------------------------------- signed in
+    // One real sign-in for the whole suite. Previously every test signed in, which at 62
+    // tests exceeded Supabase's auth rate limit; the rejections then surfaced as
+    // `signIn()` never leaving /login, which reads like a broken login page rather than a
+    // throttled one.
+    {name: 'setup', testMatch: /auth\.setup\.ts/},
+
+    // Read-only signed-in specs. They reuse the stored session and never sign out, so
+    // they are safe to run in parallel again.
+    {
+      name: 'authed-chromium',
+      testDir: './e2e/auth',
+      testIgnore: [/auth\.setup\.ts/, /session\.spec\.ts/],
+      use: {...devices['Desktop Chrome'], storageState: AUTH_STATE},
+      dependencies: ['setup'],
+    },
+    {
+      name: 'authed-mobile-rtl',
+      testDir: './e2e/auth',
+      testIgnore: [/auth\.setup\.ts/, /session\.spec\.ts/],
+      use: {...devices['Pixel 7'], locale: 'ar', storageState: AUTH_STATE},
+      dependencies: ['setup'],
+    },
+
+    // The auth lifecycle itself. These sign in and out for real, and sign-out is GLOBAL
+    // (D-24) — it revokes the shared session above. So they run LAST, after everything
+    // that depends on that session has finished.
+    // Chromium only, deliberately. Signing in and out is not a layout concern, and the
+    // mobile-RTL viewport already covers every read-only signed-in view via
+    // authed-mobile-rtl. Running this file on both projects doubled the real password
+    // grants for no extra coverage, and Supabase throttles them per IP — which surfaced
+    // as `signIn()` never leaving /login, i.e. as if the login page were broken.
+    {
+      name: 'session-chromium',
+      testMatch: /session\.spec\.ts/,
+      use: {...devices['Desktop Chrome']},
+      dependencies: ['authed-chromium', 'authed-mobile-rtl'],
+    },
   ],
 
   webServer: {

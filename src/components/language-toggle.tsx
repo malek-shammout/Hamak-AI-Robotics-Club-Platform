@@ -34,9 +34,15 @@ export function LanguageToggle() {
   function switchLocale() {
     setPreferredLocale(next);
 
-    startTransition(async () => {
-      // Fire-and-forget: a failed profile write must not block the UI switch.
-      // RLS `self_update_profile` restricts this to the caller's own row.
+    // Genuinely fire-and-forget. This used to be AWAITED before navigating, despite the
+    // comment claiming otherwise: two Supabase round-trips (getUser, then the update) sat
+    // between the click and the visible language change, so a signed-in user on a slow
+    // connection saw nothing happen for seconds. Caught by the E2E language-switch spec
+    // exceeding its timeout.
+    //
+    // RLS `self_update_profile` restricts the write to the caller's own row, and the
+    // cookie already carries the preference, so losing this write costs nothing.
+    void (async () => {
       try {
         const supabase = createClient();
         const {data} = await supabase.auth.getUser();
@@ -46,7 +52,9 @@ export function LanguageToggle() {
       } catch {
         // Non-fatal - the cookie still carries the preference.
       }
+    })();
 
+    startTransition(() => {
       router.replace(
         // @ts-expect-error - pathname is a validated route at runtime
         {pathname, params, query: Object.fromEntries(searchParams.entries())},
