@@ -316,7 +316,7 @@ Work cycles through five personas; each hands off explicitly.
 | Migrations | 24 files on disk |
 | Schedulers | `hmk-br04-expire-offers` (15 min) · `hmk-rr1-release-reservations` (hourly) · `hmk-br08-escalate-sla` (20 min) |
 | Storage | `media` (public), `certificates` (private, **no client policy** — RR-4), `evidence` (private) |
-| Demo data | **None.** 1 user (ADMIN); 0 everywhere else |
+| Demo data | ⚠ **PRESENT (S008, club-authorised).** 4 fictional trainers `%@demo.hamak.invalid` (**password-less — cannot be signed into**), 3 projects `DEMO-%`, 8 curated expertise rows, 7 technologies. Purge with `supabase/seed/demo_content_CLEANUP.sql`. Real records replace it after the club's team meeting |
 | Auth | min 8, lower+upper+digits, reauth on password change. **HIBP unavailable — Pro plan only** |
 | **Version control** | ✅ **`github.com/malek-shammout/Hamak-AI-Robotics-Club-Platform`** — 14 commits. No secrets in tree **or history** |
 
@@ -417,6 +417,12 @@ Every test aborts its transaction; nothing persists (row-counted after).
 - **(D-12)** Is an evaluations entity ever wanted?
 - Should `project_bom_lines` stay staff-only?
 - **(M2)** What are the club's actual expertise fields, and who advises in each? *(open)*
+- **(M7)** `projects.abstract` and `projects.problem_statement` are **single columns** —
+  no `_ar`/`_en` pair and no `translation_group_id`, so a project's long-form text can
+  exist in only ONE language and both locales render the same string. Found by rendering
+  the seeded pages in S008. Titles ARE bilingual; only long-form is affected. Fixing it
+  changes the frozen schema, so it needs a **D- decision**: add `_ar`/`_en` pairs, or
+  adopt row-per-locale as `articles` does.
 - ~~**(M10)** `signOut()` scope~~ — **ANSWERED (S007): stays global.** See D-24.
 - ~~**(M7)** Who may edit `project_members`?~~ — **ANSWERED (S007): ADMIN, manager, or
   the project's own LEAD.** See D-23; enforced by migration 0026.
@@ -427,6 +433,11 @@ Every test aborts its transaction; nothing persists (row-counted after).
 
 | Date | Change |
 |---|---|
+| 2026-08-27 | **Staff-authorised views verified at last** — the club provisioned a staff account (5 department roles, deliberately **not** ADMIN). The staff specs asserted "renders OR redirects cleanly", which passed either way; they now assert the page **actually rendered** with its own specific heading, and **skip loudly** where a permission is missing. All 15 staff routes render; none skipped |
+| 2026-08-27 | **The E2E suite was exceeding Supabase's auth rate limit** — one real sign-in per test, 62 grants in nine minutes. The rejections surfaced as `signIn()` never leaving `/login`, reading like a broken login page rather than a throttled one. `auth.setup.ts` now signs in once and the session is reused; lifecycle specs run last (sign-out is global, D-24). **8.4 min → 1.3 min, 190 passing**, stable across runs. The stored state holds a live token and is gitignored |
+| 2026-08-27 | **`language-toggle.tsx` claimed fire-and-forget and wasn't.** It awaited TWO Supabase round-trips before `router.replace`, so for a signed-in user the language switch was blocked behind them. Comment and code disagreed; the code now matches what the comment always said |
+| 2026-08-27 | **Demo content seeded on club authorisation** to unblock M2 and the authoring UI. M2 went from inert to live — an AI request now returns 2 ranked candidates. Trainer identities are **password-less**: creating usable credentials is account creation and stays a human action, as it has since Session 001. Seed and a dry-run-first cleanup script live in `supabase/seed/` |
+| 2026-08-27 | **A bilingual gap found by rendering the seeded pages**: `projects.abstract` and `problem_statement` are single columns, so long-form project text exists in one language only and both locales show it. My first seed hid this by putting English in one field and Arabic in the other. Recorded as an open question — fixing it changes the frozen schema |
 | 2026-08-27 | **Two E2E defects fixed while re-verifying after 0026, neither a product bug.** (a) The 404 smoke test returned 200 because an orphaned `next start` from a killed command was still on :3100 and `reuseExistingServer` attached to its partial `.next` — the **Session 005 trap recurring**, this time triggered by a command hitting the timeout. (b) The sign-out spec clicked and immediately navigated, racing its own POST under the ~50-sign-in auth pass; it now waits for the redirect to `/{locale}` first. Final: **134 public + 48 auth passing, 2 skipped** |
 | 2026-08-27 | **D-23 — project team membership locked down, on a club ruling, after proving the gap.** Membership confers the BR-12 right to raise hardware requisitions, yet `project_members` carried the ordinary staff write policies: a user holding only M7.UPDATE **added a member, and it persisted**. Now ADMIN / M7.APPROVE / that project's own LEAD, via a `SECURITY DEFINER` predicate (a policy reading its own table would recurse — D-20). Migration 0026, test 14: generic editor blocked from adding AND removing, lead may manage their own project but not another, stranger refused |
 | 2026-08-27 | **D-24 — `signOut()` stays global scope, by club ruling.** Students share lab PCs, so ending every session everywhere is the point, not an oversight. Recorded because it is now a *decision* rather than a Supabase default — and because it is the direct cause of the E2E single-worker requirement |
