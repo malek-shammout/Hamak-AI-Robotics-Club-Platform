@@ -35,6 +35,16 @@ test('signing out ends the session and re-guards the member area', async ({page}
   await signIn(page);
   await page.getByRole('button', {name: /sign out|تسجيل الخروج/i}).click();
 
+  // Wait for the sign-out to LAND before navigating away. `signOut` redirects to
+  // `/{locale}`, so this is the observable end of the action.
+  //
+  // Without it the test races itself: under sustained load — the full auth pass performs
+  // ~50 real sign-ins on one worker — the POST can still be in flight when the goto()
+  // below fires, the guard then correctly admits a session that is still valid, and the
+  // failure reads as "sign-out does not work" when what actually happened is that it had
+  // not happened yet. Observed intermittently three times before this was added.
+  await expect(page).toHaveURL(/\/en$/, {timeout: 15_000});
+
   await page.goto('/en/me/applications');
   await expect(page).toHaveURL(/\/en\/login$/);
 });

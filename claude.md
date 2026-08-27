@@ -80,7 +80,7 @@ A7 generalises A2…A6 (§1.3 of Step 1) — realised as `ADMIN` holding every p
 | **D-10** | **NEW (Session 001).** Supabase Auth owns credentials | `users.password_hash` removed; `users.id` → FK `auth.users(id)`; `token_epoch` retained for JWT invalidation |
 | **D-11** | **NEW (Session 002).** Privileged domain logic lives in the **database**, not in Server Actions | Every user-uncontrollable transition is a `SECURITY DEFINER` function; Server Actions are thin forwarders. **Corollary: SECURITY DEFINER bypasses RLS, so every such function asserts its own authorisation as its first act** — ownership vs `auth.uid()` or `app.has_perm()`. That assertion IS the boundary; a function added without one is a hole |
 | **D-12** | **NEW (Session 002).** BR-05's evaluation half is an **A2 attestation**; there is no evaluations entity | Step 1 §3 = "marked passed by A2"; Step 2 §B.1 = "Domain service", not a table. M4's assessment tables bind to `applications`, not `enrollments`. `mark_enrollment_completed` takes an explicit boolean; `false` fails the rule exactly as short attendance does. **Do not add an evaluations table without a new D- decision** |
-| **D-13** | **NEW (Session 002).** **Row scoping is not column scoping** | A table holding columns its row-owner must not write gets a **column-level GRANT** or an **RPC-only write path**. Learned from **five** real flaws: `attempt_answers.awarded_score` (self-grading), `users.email` (contributor credits), `liability_records` waiver actor, `consultation_messages` (a `WITH CHECK` that validated the sender COLUMN but never the thread — any signed-in user could inject messages into any private consultation), and `publication_status` on the five publishable entities (D-22). The recurring tell is a check that validates a **column** rather than the row's **relationship** — or, in D-22's case, its **transition** |
+| **D-13** | **NEW (Session 002).** **Row scoping is not column scoping** | A table holding columns its row-owner must not write gets a **column-level GRANT** or an **RPC-only write path**. Learned from **five** real flaws: `attempt_answers.awarded_score` (self-grading), `users.email` (contributor credits), `liability_records` waiver actor, `consultation_messages` (a `WITH CHECK` that validated the sender COLUMN but never the thread — any signed-in user could inject messages into any private consultation), `publication_status` on the five publishable entities (D-22), and `project_members` (D-23). The recurring tell is a check that validates a **column** rather than the row's **relationship** — or its **transition** (D-22), or the **authority the row confers on someone else** (D-23) |
 | **D-14** | **NEW (Session 002).** Lock order is **cohort → application**, always | `respond_to_offer` originally inverted it against the seat allocator — a deadlock under concurrent load. Any future function touching both tables must use this order |
 | **D-15** | **NEW (Session 002).** A question used by an `ACTIVE`/`LOCKED` test is **frozen** | Editing it would silently rewrite a live exam and invalidate graded attempts. Trigger refuses; `clone_question_as_new_version()` is the sanctioned route |
 | **D-16** | **NEW (Session 003).** Every business rule ships with a **committed adversarial test** | Rules live in `supabase/tests/` and run on `npm run test:db` / `npm run verify`. A rule verified once by an ad-hoc probe is anecdote, not verification. **Each test MUST end with `raise exception 'ALL_..._PASSED'`** so the transaction aborts and no row persists; the runner treats a clean return as a FAILURE precisely to catch a test that commits |
@@ -90,6 +90,8 @@ A7 generalises A2…A6 (§1.3 of Step 1) — realised as `ADMIN` holding every p
 | **D-20** | **NEW (Session 005).** **An RLS policy that subqueries another table is subject to THAT table's RLS.** Participation predicates live in a `SECURITY DEFINER` helper, never in a policy subquery | Proven on M2: `consultation_requests.self_consultations` granted access to an assigned expert via `EXISTS (SELECT 1 FROM consultation_assignments ...)`, but `consultation_assignments` had no self-read policy, so the subquery returned nothing and the branch was **dead for everyone**. A policy that reads as if it grants access and grants none is worse than a missing policy, because review passes it. `app.is_consultation_participant(uuid)` is the single predicate; it takes **no user id**, only `auth.uid()`, so it cannot be used to probe anyone else |
 | **D-21** | **NEW (Session 005).** A counterpart's **display name** is disclosed by a narrow definer function, never by widening a row policy on `users` | `users.self_read_profile` scopes reads to `id = app.uid()`, so a join from a consultation thread rendered every counterpart message unattributed — proven. The fix is `get_consultation_participants(uuid)`: names only, participants only. A row policy would have exposed the whole `users` row (email included) to satisfy a need for one string. Same shape as the 0007 contributor-credits fix |
 | **D-22** | **NEW (Session 007).** **Publishing is gated on `<module>.APPROVE`, never on `UPDATE`** — enforced by a trigger, because publication is a TRANSITION, not a column | `staff_update` on the five publishable entities carried no column restriction, so anyone who could EDIT could also publish. **Proven**: a user with M7.READ/CREATE/UPDATE and explicitly *not* M7.APPROVE published a project; `ck_project_published_stamped` briefly refused, and supplying `published_at` by hand satisfied it. Not exploitable in the seed (every UPDATE holder also holds APPROVE) — it opens the moment a drafting role exists, which an authoring UI invites. A column GRANT cannot express this because the rule compares OLD to NEW; `app.assert_publish_authorised()` does, and stamps `published_at` server-side so the timestamp is not client-dictated |
+| **D-23** | **NEW (Session 007, club ruling).** **Project team membership is ADMIN / manager / that project's own LEAD — never a generic `M7.UPDATE` holder** | Membership is not descriptive: `raise_requisition` treats it as authorisation to raise hardware requisitions against the project (BR-12). **Proven before the fix**: a user holding only M7.UPDATE added a member, silently converting an editing permission into a custody-adjacent one. `app.can_manage_project_team()` is `SECURITY DEFINER` because the predicate reads the very table it protects — a policy subquerying its own table recurses (D-20). A new project has no LEAD, so the first member can only be seeded by an admin or manager; that bootstrap asymmetry is intended, as in D-18. Migration 0026, test 14 |
+| **D-24** | **NEW (Session 007, club ruling).** `signOut()` stays **`scope: 'global'`** — a deliberate security choice, not an unexamined default | Students frequently use shared lab PCs, so signing out must end every session on every device rather than leaving an abandoned one behind. **Consequence to remember:** any test or feature that assumes one sign-out affects only one device is wrong. This is precisely what made the S007 E2E suite race itself, and why `e2e/auth` must run on a single worker. Do not "fix" a future session failure by changing this scope |
 
 ### Residual risks (from Part D.3)
 | # | Risk | Status |
@@ -309,9 +311,9 @@ Work cycles through five personas; each hands off explicitly.
 | Artifact | Status |
 |---|---|
 | Supabase project | `hgzuiowjxjmyelelzybn` — us-west-2, PG 17.6.1, ACTIVE_HEALTHY |
-| Live inventory | **78 tables / 7 views / 375 policies / 61 functions / 0 tables without RLS** · 5 publish-guard triggers (D-22) |
+| Live inventory | **78 tables / 7 views / 375 policies / 62 functions / 0 tables without RLS** · 5 publish-guard triggers (D-22) |
 | Entity reconciliation | schema.sql **78** = live **78** = §5 sum **78**. **Unchanged since freeze** (D-19 added columns, not tables) |
-| Migrations | 23 files on disk |
+| Migrations | 24 files on disk |
 | Schedulers | `hmk-br04-expire-offers` (15 min) · `hmk-rr1-release-reservations` (hourly) · `hmk-br08-escalate-sla` (20 min) |
 | Storage | `media` (public), `certificates` (private, **no client policy** — RR-4), `evidence` (private) |
 | Demo data | **None.** 1 user (ADMIN); 0 everywhere else |
@@ -344,20 +346,21 @@ content, not missing capability.
 | RR-4 document immutability | ✅ **CLOSED (S004)** |
 | RR-5 Arabic full-text search | ⚠️ **Only one left** — unevaluated Phase-2 item, not a defect |
 
-### Test suite — **13 files**
+### Test suite — **14 files**
 01 BR-01 · 02 M3 offers · 03 BR-02/03/04 · 04 M4 assessment (**self-grading guard**) ·
 05 M4 grading + D-15 · 06 BR-05 + D-12 · 07 M5 custody (**waiver guard**) ·
 08 M6 full lifecycle · 09 requisitions + RR-1 · 10 RR-4 immutability ·
 11 M2 consultations (**message-injection guard**, BR-08, D-06) · 12 M2 expertise curation (D-06) ·
-13 BR-11 publish authorisation (**publish-without-APPROVE guard**, D-22)
+13 BR-11 publish authorisation (**publish-without-APPROVE guard**, D-22) ·
+14 BR-12 project team membership (**membership-grants-custody guard**, D-23)
 
 Every test aborts its transaction; nothing persists (row-counted after).
 
-> **Honest note on 11, 12 and 13:** each was executed against the live database via the
+> **Honest note on 11–14:** each was executed against the live database via the
 > Management API and returned its `ALL_..._PASSED` sentinel, but they have **not** been
 > run through `scripts/run-db-tests.mjs`, which needs `SUPABASE_ACCESS_TOKEN` /
 > `SUPABASE_PROJECT_REF` in the environment. Run `npm run test:db` once with those set
-> to confirm all 13 together — it is the only step of `npm run verify` still unrun here.
+> to confirm all 14 together — it is the only step of `npm run verify` still unrun here.
 
 ### Verification status — honest
 | Check | Status |
@@ -399,6 +402,9 @@ Every test aborts its transaction; nothing persists (row-counted after).
 4. **Content, not code:** seed the expertise catalogue, then author the first real
    projects/events/articles through the new screens.
 
+> Session 008 is agreed with the club as **content seeding + the final staff E2E run**,
+> using the second (staff-permissioned) account they are provisioning.
+
 > **Club-owned:** curating the initial expertise domains at `/staff/expertise`.
 > **M2 stays inert until that lands** — `suggest_experts` ranks over `member_expertise`
 > and returns nothing while it is empty.
@@ -411,13 +417,9 @@ Every test aborts its transaction; nothing persists (row-counted after).
 - **(D-12)** Is an evaluations entity ever wanted?
 - Should `project_bom_lines` stay staff-only?
 - **(M2)** What are the club's actual expertise fields, and who advises in each? *(open)*
-- **(M10)** Should `signOut()` stay **global scope** (the current Supabase default —
-  signing out anywhere ends every session on every device), or become `local`? Nobody
-  chose global; it is what Supabase does when passed nothing. Global is defensible on
-  shared lab machines, so this needs a ruling rather than a silent change.
-- **(M7)** Who may edit `project_members`? It grants the BR-12 right to raise a
-  requisition against that project, so the authoring screen deliberately shows it
-  read-only pending a decision.
+- ~~**(M10)** `signOut()` scope~~ — **ANSWERED (S007): stays global.** See D-24.
+- ~~**(M7)** Who may edit `project_members`?~~ — **ANSWERED (S007): ADMIN, manager, or
+  the project's own LEAD.** See D-23; enforced by migration 0026.
 
 ---
 
@@ -425,6 +427,9 @@ Every test aborts its transaction; nothing persists (row-counted after).
 
 | Date | Change |
 |---|---|
+| 2026-08-27 | **Two E2E defects fixed while re-verifying after 0026, neither a product bug.** (a) The 404 smoke test returned 200 because an orphaned `next start` from a killed command was still on :3100 and `reuseExistingServer` attached to its partial `.next` — the **Session 005 trap recurring**, this time triggered by a command hitting the timeout. (b) The sign-out spec clicked and immediately navigated, racing its own POST under the ~50-sign-in auth pass; it now waits for the redirect to `/{locale}` first. Final: **134 public + 48 auth passing, 2 skipped** |
+| 2026-08-27 | **D-23 — project team membership locked down, on a club ruling, after proving the gap.** Membership confers the BR-12 right to raise hardware requisitions, yet `project_members` carried the ordinary staff write policies: a user holding only M7.UPDATE **added a member, and it persisted**. Now ADMIN / M7.APPROVE / that project's own LEAD, via a `SECURITY DEFINER` predicate (a policy reading its own table would recurse — D-20). Migration 0026, test 14: generic editor blocked from adding AND removing, lead may manage their own project but not another, stranger refused |
+| 2026-08-27 | **D-24 — `signOut()` stays global scope, by club ruling.** Students share lab PCs, so ending every session everywhere is the point, not an oversight. Recorded because it is now a *decision* rather than a Supabase default — and because it is the direct cause of the E2E single-worker requirement |
 | 2026-08-27 | **The signed-in E2E specs finally ran — and the first result looked like a session-persistence bug that was not one.** 3 specs failed; server logs showed sign-in succeeding and the guard 307-ing only after a concurrent sign-out. `supabase.auth.signOut()` defaults to `scope: 'global'`, revoking every session for the user, and `fullyParallel: true` had all specs sharing one account. **5/5 serial vs 3/5 parallel** proved it. Fixed in the runner, not the assertions: `test:e2e` now runs auth as a separate `--workers=1` pass |
 | 2026-08-27 | **D-22 — publishing requires APPROVE, not UPDATE.** Sixth flaw found by auditing RLS before writing feature code. A user with M7.UPDATE and explicitly not M7.APPROVE **published a project**; the only obstacle was a stamp CHECK that hand-supplying `published_at` satisfied. Fixed by a trigger on all five publishable entities, because the rule compares OLD to NEW and a column grant cannot see a transition. `published_at` is now server-stamped — a bogus client value of 2001 was proven overridden. Migration 0025, test 13 |
 | 2026-08-27 | **M7/M8/M9 authoring built — the last structural gap.** Projects, events and articles: draft → review → publish. Articles are authored per locale and the list groups by `translation_group_id`, flagging in red any piece **published in one language only** — the failure mode row-per-locale invites. Added `/staff`, a permission-filtered hub, because every staff screen was previously reachable only by typing its URL |

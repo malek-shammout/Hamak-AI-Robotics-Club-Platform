@@ -1015,7 +1015,7 @@
     "sessions": "Sessions",
     "noSessions": "No sessions added yet.",
     "noTeam": "No team members recorded.",
-    "teamNote": "Project membership also grants the right to raise a hardware requisition against this project (BR-12), so it is not editable here.",
+    "teamNote": "Project membership grants the right to raise hardware requisitions against this project (BR-12), so only an admin, the projects manager, or this project's own lead can change it.",
     "noTechnologies": "No technologies have been defined yet.",
     "currentState": "Current state",
     "submitForReview": "Submit for review",

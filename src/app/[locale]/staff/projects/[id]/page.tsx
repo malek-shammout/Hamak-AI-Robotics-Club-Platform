@@ -93,9 +93,11 @@ export default async function EditProjectPage({
             ))}
           </ul>
         )}
-        {/* Team membership drives BR-12's project-custody branch (a member may raise a
-            requisition against a project they belong to), so it is deliberately not
-            editable from this screen without a decision about who may grant it. */}
+        {/* Read-only by ruling, not by omission. Membership drives BR-12's project-custody
+            branch — a member may raise a requisition against a project they belong to — so
+            the club restricted it to ADMIN, the projects manager, or the project's own
+            LEAD (D-23, migration 0026). The database enforces that; this screen simply
+            does not offer an edit path that most viewers would be refused. */}
         <p className="mt-3 text-xs text-[--foreground-muted]">{t('teamNote')}</p>
       </section>
     </>
