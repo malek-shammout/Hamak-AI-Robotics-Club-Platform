@@ -303,8 +303,8 @@ Work cycles through five personas; each hands off explicitly.
 
 ## 13. Current Status
 
-**Last updated: 2026-08-31 (Session 012).** Journal: `journals/2026-08-31-session-012.md`
-> Sessions 008–012 extend the live staff RBAC validation, authoring/approval flow checks, and end-to-end draft-to-publish smoke tests using role-bearing Supabase identities. The repository is in the live validation phase, not the design-only phase.
+**Last updated: 2026-09-01 (Session 013).** Journal: `journals/2026-09-01-session-013.md`
+> Sessions 008–013 extend the live staff RBAC validation, authoring/approval flow checks, draft-to-publish coverage, and editorial rejection/revision/unpublishing tests. The repository is in the live validation phase, not the design-only phase.
 
 ### Live system
 | Artifact | Status |
@@ -374,15 +374,16 @@ Every test aborts its transaction; nothing persists (row-counted after).
 | **Staff-authorised views** | ✅ **verified on a real staff account** — a role-bearing staff user was created and the signed-in auth suite passed on the real RBAC path |
 | **Staff publication + authoring RBAC** | ✅ **`/staff/news` alias + publish gating coverage added** — the signed-in suite now validates the route matrix and distinguishes authoring access from approval-only actions |
 | **Draft-to-publish smoke checks** | ✅ **Live author → review → approve → publish path exercised** — a role-bearing author and admin were used to validate the project, event, and article transitions without persistent side effects |
+| **Editorial rejection / revision / unpublishing** | ⚠️ **Test coverage added, live execution blocked** — the new suite covers rejection, author revision and resubmission, approval, unpublishing, and non-approver publication guards for projects, events, and articles; the runner had no `E2E_*` credentials, so all auth scenarios skipped |
 | M2 pages in a real browser | ✅ both locales, RTL/LTR, toggle keeps route + query, no overflow at 375px |
 | **Frontend unit tests** | ✅ **33 tests, 5 files (S007)** — the language toggle (proven regression), the M2 forms, and the BR-11 publish controls. Rendered against the REAL message catalogues, so each doubles as a missing-key check |
 | `npm run i18n:check` | ✅ **fixed (S006)** — `scripts/check-translations.mjs` was referenced by `package.json` for four sessions but **never existed**, so the bilingual gate silently never ran. Written; now asserts key parity AND ICU placeholder parity. 815 keys, clean |
 | **`npm run lint`** | ✅ **FIXED (S007)** — `eslint-config-next@16` exports native flat config, so `FlatCompat` was the wrong tool. 0 errors, 1 documented warning. Every relaxation carries a stated reason. **`npm run verify` now passes end to end** except `test:db`, which needs credentials this machine does not hold |
 
 > The database is exhaustively covered, the frontend has broad public E2E coverage, the
-> signed-in specs finally run, and component tests exist. **The remaining gap is
-> narrower and specific: no test has ever exercised a STAFF-AUTHORISED view**, because
-> the only test account holds no roles.
+> signed-in specs and component tests exist. **The remaining verification gap is the
+> editorial rejection/revision/unpublishing loop**, which requires role credentials in the
+> E2E runner; the latest command exited cleanly but skipped every authenticated scenario.
 
 ### Deploy prerequisites
 1. `SUPABASE_SERVICE_ROLE_KEY` in the deploy environment — the `certificates` bucket has
@@ -434,6 +435,7 @@ Every test aborts its transaction; nothing persists (row-counted after).
 
 | Date | Change |
 |---|---|
+| 2026-09-01 | **Editorial rejection/revision/unpublishing coverage added** — `e2e/auth/editorial-revision.spec.ts` now exercises author draft → review → rejection → revision → resubmission → approval → publication → unpublishing for projects, events, and articles, and asserts non-approvers cannot force publication. The implementation type-checks; live execution remains blocked until `E2E_*` credentials are supplied to the Playwright process. |
 | 2026-08-31 | **Live draft-to-publish smoke checks passed** — the signed-in E2E suite exercised the author → review → approve → publish path against live `PROJECTS` and `ADMIN` identities for project, event, and article records, and the checks completed cleanly without persistent side effects. |
 | 2026-08-31 | **Publication and authoring RBAC coverage expanded** — the signed-in suite now includes `/staff/news` and asserts the actual difference between authoring access and approval-only access on the publish controls that gate BR-11 / D-22. |
 | 2026-08-31 | **RBAC coverage stabilised and validated across live staff roles** — the route-coverage Playwright suite was hardened against slow page loads with `test.slow()` and longer route waits, and the full `npm run test:e2e:auth` run passed for `PROJECTS`, `TRAINING`, `LOGISTICS`, and `ADMIN` identities against the live Supabase project. |
