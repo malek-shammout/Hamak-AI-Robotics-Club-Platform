@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {useSyncExternalStore} from 'react';
 import {useTheme} from 'next-themes';
 import {useTranslations} from 'next-intl';
 import {Moon, Sun} from 'lucide-react';
@@ -8,12 +8,14 @@ import {Moon, Sun} from 'lucide-react';
 export function ThemeToggle() {
   const t = useTranslations('actions');
   const {resolvedTheme, setTheme} = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   // Theme is unknowable during SSR. Render a same-size placeholder so the header
   // does not shift when the real control appears.
-  useEffect(() => setMounted(true), []);
-
   const isDark = resolvedTheme === 'dark';
 
   return (
