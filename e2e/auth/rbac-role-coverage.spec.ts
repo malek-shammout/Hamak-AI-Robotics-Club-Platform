@@ -21,10 +21,11 @@ for (const [role, routes] of Object.entries(ROLE_MATRIX) as [keyof typeof ROLE_M
       await signIn(page, 'en', email, password);
 
       for (const route of routes) {
+        const allowedTargets = route === '/staff/news' ? ['/en/staff/news', '/en/staff/articles'] : [`/en${route}`];
         await page.goto(`/en${route}`, {waitUntil: 'domcontentloaded'});
         await expect
-          .poll(() => page.url(), {timeout: 60_000})
-          .toContain(`/en${route}`);
+          .poll(() => new URL(page.url()).pathname, {timeout: 60_000})
+          .toMatch(new RegExp(`^(${allowedTargets.map((target) => target.replace(/\//g, '\\/')).join('|')})(?:/.*)?$`));
         await expect(page.locator('main')).toBeVisible({timeout: 60_000});
       }
     });

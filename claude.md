@@ -303,9 +303,8 @@ Work cycles through five personas; each hands off explicitly.
 
 ## 13. Current Status
 
-**Last updated: end of Session 007 (2026-08-27).** Journal: `journals/2026-08-27-session-007.md`
-> Journals 001–007 are all written. 005 and 006 were authored retroactively at the close of
-> Session 006, from git and the live database rather than from recollection.
+**Last updated: 2026-08-31 (Session 012).** Journal: `journals/2026-08-31-session-012.md`
+> Sessions 008–012 extend the live staff RBAC validation, authoring/approval flow checks, and end-to-end draft-to-publish smoke tests using role-bearing Supabase identities. The repository is in the live validation phase, not the design-only phase.
 
 ### Live system
 | Artifact | Status |
@@ -374,6 +373,7 @@ Every test aborts its transaction; nothing persists (row-counted after).
 | **Signed-in flows** | ✅ **RUN AT LAST (S007)** — 48 passing, 2 skipped (a clearance record the empty DB does not have). Open since Session 002 |
 | **Staff-authorised views** | ✅ **verified on a real staff account** — a role-bearing staff user was created and the signed-in auth suite passed on the real RBAC path |
 | **Staff publication + authoring RBAC** | ✅ **`/staff/news` alias + publish gating coverage added** — the signed-in suite now validates the route matrix and distinguishes authoring access from approval-only actions |
+| **Draft-to-publish smoke checks** | ✅ **Live author → review → approve → publish path exercised** — a role-bearing author and admin were used to validate the project, event, and article transitions without persistent side effects |
 | M2 pages in a real browser | ✅ both locales, RTL/LTR, toggle keeps route + query, no overflow at 375px |
 | **Frontend unit tests** | ✅ **33 tests, 5 files (S007)** — the language toggle (proven regression), the M2 forms, and the BR-11 publish controls. Rendered against the REAL message catalogues, so each doubles as a missing-key check |
 | `npm run i18n:check` | ✅ **fixed (S006)** — `scripts/check-translations.mjs` was referenced by `package.json` for four sessions but **never existed**, so the bilingual gate silently never ran. Written; now asserts key parity AND ICU placeholder parity. 815 keys, clean |
@@ -434,6 +434,7 @@ Every test aborts its transaction; nothing persists (row-counted after).
 
 | Date | Change |
 |---|---|
+| 2026-08-31 | **Live draft-to-publish smoke checks passed** — the signed-in E2E suite exercised the author → review → approve → publish path against live `PROJECTS` and `ADMIN` identities for project, event, and article records, and the checks completed cleanly without persistent side effects. |
 | 2026-08-31 | **Publication and authoring RBAC coverage expanded** — the signed-in suite now includes `/staff/news` and asserts the actual difference between authoring access and approval-only access on the publish controls that gate BR-11 / D-22. |
 | 2026-08-31 | **RBAC coverage stabilised and validated across live staff roles** — the route-coverage Playwright suite was hardened against slow page loads with `test.slow()` and longer route waits, and the full `npm run test:e2e:auth` run passed for `PROJECTS`, `TRAINING`, `LOGISTICS`, and `ADMIN` identities against the live Supabase project. |
 | 2026-08-31 | **Staff bootstrap and RBAC path validated for real** — a role-bearing staff account was successfully created in Supabase, the `npm run staff:bootstrap` flow was proven end to end, and the signed-in Playwright auth suite passed against the live staff account after installing the required Chromium runtime. |
