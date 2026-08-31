@@ -7,7 +7,7 @@
 
 **Project:** HMK AI & Robotics Club Platform — نادي الهمك للذكاء الصنعي والروبوتيك
 **Working directory:** `E:\Full Stack X AI\Final Project`
-**Last updated:** 2026-08-27 (Session 007)
+**Last updated:** 2026-08-31 (Session 008)
 
 ---
 
@@ -372,7 +372,7 @@ Every test aborts its transaction; nothing persists (row-counted after).
 | Storage upload + attach path | ✅ **Verified (S005)** — 8 checks incl. byte round-trip + re-hash |
 | Public + guard flows in a browser | ✅ **Playwright, 134 passing** (chromium + mobile-RTL) |
 | **Signed-in flows** | ✅ **RUN AT LAST (S007)** — 48 passing, 2 skipped (a clearance record the empty DB does not have). Open since Session 002 |
-| **Staff-authorised views** | ⚠️ **still unexercised** — the test account holds **0 roles**, so the staff specs assert "renders or redirects cleanly", not what an authorised user sees |
+| **Staff-authorised views** | ✅ **verified on a real staff account** — a role-bearing staff user was created and the signed-in auth suite passed on the real RBAC path |
 | M2 pages in a real browser | ✅ both locales, RTL/LTR, toggle keeps route + query, no overflow at 375px |
 | **Frontend unit tests** | ✅ **33 tests, 5 files (S007)** — the language toggle (proven regression), the M2 forms, and the BR-11 publish controls. Rendered against the REAL message catalogues, so each doubles as a missing-key check |
 | `npm run i18n:check` | ✅ **fixed (S006)** — `scripts/check-translations.mjs` was referenced by `package.json` for four sessions but **never existed**, so the bilingual gate silently never ran. Written; now asserts key parity AND ICU placeholder parity. 815 keys, clean |
@@ -433,6 +433,7 @@ Every test aborts its transaction; nothing persists (row-counted after).
 
 | Date | Change |
 |---|---|
+| 2026-08-31 | **Staff bootstrap and RBAC path validated for real** — a role-bearing staff account was successfully created in Supabase, the `npm run staff:bootstrap` flow was proven end to end, and the signed-in Playwright auth suite passed against the live staff account after installing the required Chromium runtime. |
 | 2026-08-31 | **Staff bootstrap path hardened and validated** — the CLI parsing for `scripts/bootstrap-staff-account.mjs` was corrected so `--email`, `--password`, and `--role` behave predictably, and the project now exposes the workflow via `npm run staff:bootstrap` for repeatable staff-account creation. |
 | 2026-08-27 | **Staff-authorised views verified at last** — the club provisioned a staff account (5 department roles, deliberately **not** ADMIN). The staff specs asserted "renders OR redirects cleanly", which passed either way; they now assert the page **actually rendered** with its own specific heading, and **skip loudly** where a permission is missing. All 15 staff routes render; none skipped |
 | 2026-08-27 | **The E2E suite was exceeding Supabase's auth rate limit** — one real sign-in per test, 62 grants in nine minutes. The rejections surfaced as `signIn()` never leaving `/login`, reading like a broken login page rather than a throttled one. `auth.setup.ts` now signs in once and the session is reused; lifecycle specs run last (sign-out is global, D-24). **8.4 min → 1.3 min, 190 passing**, stable across runs. The stored state holds a live token and is gitignored |

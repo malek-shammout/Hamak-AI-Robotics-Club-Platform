@@ -1,5 +1,24 @@
 #!/usr/bin/env node
+import fs from 'node:fs';
 import {createClient} from '@supabase/supabase-js';
+
+function loadLocalEnv() {
+  const target = '.env.local';
+  if (!fs.existsSync(target)) return;
+
+  for (const line of fs.readFileSync(target, 'utf8').split(/\r?\n/)) {
+    if (!line || line.trim().startsWith('#')) continue;
+    const separatorIndex = line.indexOf('=');
+    if (separatorIndex < 0) continue;
+    const key = line.slice(0, separatorIndex).trim();
+    const value = line.slice(separatorIndex + 1).trim();
+    if (!process.env[key]) {
+      process.env[key] = value;
+    }
+  }
+}
+
+loadLocalEnv();
 
 const args = new Map();
 for (let i = 2; i < process.argv.length; i += 1) {
@@ -24,8 +43,22 @@ for (let i = 2; i < process.argv.length; i += 1) {
 }
 
 function envOrArg(name, fallback) {
-  const value = process.env[name] ?? args.get(name.toLowerCase()) ?? fallback;
-  return value;
+  const aliases = {
+    HMK_STAFF_EMAIL: ['HMK_STAFF_EMAIL', 'E2E_EMAIL', 'email'],
+    HMK_STAFF_PASSWORD: ['HMK_STAFF_PASSWORD', 'E2E_PASSWORD', 'password'],
+    HMK_STAFF_ROLE: ['HMK_STAFF_ROLE', 'role'],
+  };
+
+  const names = aliases[name] ?? [name];
+  for (const candidate of names) {
+    const directEnv = process.env[candidate];
+    if (directEnv !== undefined && directEnv !== '') return directEnv;
+
+    const directArg = args.get(candidate.toLowerCase());
+    if (directArg !== undefined && directArg !== '') return directArg;
+  }
+
+  return fallback;
 }
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -67,37 +100,75 @@ const passwordValue = password.trim();
 const displayAr = 'عضو اختبار فريق';
 const displayEn = 'Staff Test Member';
 
-try {
-  const {data: existing, error: lookupErr} = await supabase.auth.admin.listUsers();
-  if (lookupErr) throw lookupErr;
-  const match = existing.users.find((user) => user.email?.toLowerCase() === normalizedEmail);
+async function fetchJson(targetUrl, options = {}) {
+  const response = await fetch(targetUrl, options);
+  const text = await response.text();
+  let payload = null;
 
-  const userId = match?.id;
-
-  if (!userId) {
-    const {data: created, error: createErr} = await supabase.auth.admin.createUser({
-      email: normalizedEmail,
-      password: passwordValue,
-      email_confirm: true,
-      user_metadata: {
-        full_name_ar: displayAr,
-        full_name_en: displayEn,
-        user_type: 'MEMBER',
-        locale: 'ar',
-      },
-    });
-
-    if (createErr) throw createErr;
-    if (!created.user) throw new Error('User creation returned no user record.');
-    console.log(`Created auth user ${created.user.id} for ${normalizedEmail}`);
-  } else {
-    console.log(`Existing auth user found for ${normalizedEmail}: ${userId}`);
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = text;
+    }
   }
 
-  const {data: currentUser, error: userErr} = await supabase.auth.admin.listUsers();
-  if (userErr) throw userErr;
-  const effectiveUser = currentUser.users.find((user) => user.email?.toLowerCase() === normalizedEmail);
-  if (!effectiveUser) throw new Error(`Could not resolve the created user for ${normalizedEmail}`);
+  if (!response.ok) {
+    const detail = payload && typeof payload === 'object' ? payload.msg || payload.error || JSON.stringify(payload) : String(payload);
+    throw new Error(`${response.status} ${detail || response.statusText}`);
+  }
+
+  return payload;
+}
+
+async function getPublicUserByEmail(targetEmail) {
+  const encoded = encodeURIComponent(targetEmail);
+  const rows = await fetchJson(
+    `${url}/rest/v1/users?email=eq.${encoded}&select=id,email,full_name_en`,
+    {
+      method: 'GET',
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!Array.isArray(rows) || rows.length === 0) return null;
+  return rows[0];
+}
+
+try {
+  let effectiveUser = await getPublicUserByEmail(normalizedEmail);
+
+  if (!effectiveUser) {
+    const created = await fetchJson(`${url}/auth/v1/admin/users`, {
+      method: 'POST',
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: normalizedEmail,
+        password: passwordValue,
+        email_confirm: true,
+        user_metadata: {
+          full_name_ar: displayAr,
+          full_name_en: displayEn,
+          user_type: 'MEMBER',
+          locale: 'ar',
+        },
+      }),
+    });
+
+    if (!created?.id) throw new Error('User creation succeeded but no user id was returned.');
+    effectiveUser = {id: created.id, email: normalizedEmail};
+    console.log(`Created auth user ${created.id} for ${normalizedEmail}`);
+  } else {
+    console.log(`Existing auth user found for ${normalizedEmail}: ${effectiveUser.id}`);
+  }
 
   const {data: dept, error: deptErr} = await supabase
     .from('departments')
