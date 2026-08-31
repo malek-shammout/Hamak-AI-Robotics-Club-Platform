@@ -33,18 +33,42 @@ export const E2E_EMAIL = process.env.E2E_EMAIL;
 export const E2E_PASSWORD = process.env.E2E_PASSWORD;
 export const hasCredentials = Boolean(E2E_EMAIL && E2E_PASSWORD);
 
+export const STAFF_ROLE_CREDENTIALS = {
+  PROJECTS: {
+    email: process.env.E2E_PROJECTS_EMAIL,
+    password: process.env.E2E_PROJECTS_PASSWORD,
+  },
+  TRAINING: {
+    email: process.env.E2E_TRAINING_EMAIL,
+    password: process.env.E2E_TRAINING_PASSWORD,
+  },
+  LOGISTICS: {
+    email: process.env.E2E_LOGISTICS_EMAIL,
+    password: process.env.E2E_LOGISTICS_PASSWORD,
+  },
+  ADMIN: {
+    email: process.env.E2E_ADMIN_EMAIL,
+    password: process.env.E2E_ADMIN_PASSWORD,
+  },
+} as const;
+
 export const SKIP_REASON =
   'E2E_EMAIL / E2E_PASSWORD not set — signed-in paths were NOT verified. ' +
   'Create a throwaway member in Supabase and re-run: ' +
   'E2E_EMAIL=... E2E_PASSWORD=... npm run test:e2e';
 
-export async function signIn(page: Page, locale: 'ar' | 'en' = 'en') {
+export async function signIn(
+  page: Page,
+  locale: 'ar' | 'en' = 'en',
+  email = E2E_EMAIL,
+  password = E2E_PASSWORD
+) {
   await page.goto(`/${locale}/login`);
 
   // Addressed by label, so the test breaks if the field loses its accessible name —
   // which is a real defect — rather than when a class is renamed, which is not.
-  await page.getByLabel(/email|البريد/i).fill(E2E_EMAIL!);
-  await page.getByLabel(/password|كلمة المرور/i).fill(E2E_PASSWORD!);
+  await page.getByLabel(/email|البريد/i).fill(email!);
+  await page.getByLabel(/password|كلمة المرور/i).fill(password!);
   await page.getByRole('button', {name: /sign in|تسجيل الدخول/i}).click();
 
   // A successful sign-in leaves /login. Waiting on the URL rather than a toast means

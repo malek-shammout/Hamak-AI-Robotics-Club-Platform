@@ -433,6 +433,7 @@ Every test aborts its transaction; nothing persists (row-counted after).
 
 | Date | Change |
 |---|---|
+| 2026-08-31 | **RBAC coverage stabilised and validated across live staff roles** — the route-coverage Playwright suite was hardened against slow page loads with `test.slow()` and longer route waits, and the full `npm run test:e2e:auth` run passed for `PROJECTS`, `TRAINING`, `LOGISTICS`, and `ADMIN` identities against the live Supabase project. |
 | 2026-08-31 | **Staff bootstrap and RBAC path validated for real** — a role-bearing staff account was successfully created in Supabase, the `npm run staff:bootstrap` flow was proven end to end, and the signed-in Playwright auth suite passed against the live staff account after installing the required Chromium runtime. |
 | 2026-08-31 | **Staff bootstrap path hardened and validated** — the CLI parsing for `scripts/bootstrap-staff-account.mjs` was corrected so `--email`, `--password`, and `--role` behave predictably, and the project now exposes the workflow via `npm run staff:bootstrap` for repeatable staff-account creation. |
 | 2026-08-27 | **Staff-authorised views verified at last** — the club provisioned a staff account (5 department roles, deliberately **not** ADMIN). The staff specs asserted "renders OR redirects cleanly", which passed either way; they now assert the page **actually rendered** with its own specific heading, and **skip loudly** where a permission is missing. All 15 staff routes render; none skipped |
