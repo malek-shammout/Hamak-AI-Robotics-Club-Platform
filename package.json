@@ -27,6 +27,7 @@
     "test:db": "node scripts/run-db-tests.mjs",
     "test:e2e:ui": "playwright test --ui",
     "verify:storage": "node scripts/verify-certificate-storage.mjs",
+    "cleanup:e2e": "node scripts/cleanup-e2e-data.mjs",
     "staff:bootstrap": "node scripts/bootstrap-staff-account.mjs",
     "verify:all": "npm run verify && npm run test:e2e",
     "test:e2e:public": "playwright test e2e/public",

@@ -303,8 +303,8 @@ Work cycles through five personas; each hands off explicitly.
 
 ## 13. Current Status
 
-**Last updated: 2026-09-01 (Session 013).** Journal: `journals/2026-09-01-session-013.md`
-> Sessions 008–013 extend the live staff RBAC validation, authoring/approval flow checks, draft-to-publish coverage, and editorial rejection/revision/unpublishing tests. The repository is in the live validation phase, not the design-only phase.
+**Last updated: 2026-09-01 (Session 014).** Journal: `journals/2026-09-01-session-014.md`
+> Sessions 008–014 extend the live staff RBAC validation, authoring/approval flow checks, draft-to-publish coverage, editorial revision coverage, and launch cleanup. RBAC and authoring are 100% complete; the repository is in the launch-readiness phase.
 
 ### Live system
 | Artifact | Status |
@@ -315,7 +315,7 @@ Work cycles through five personas; each hands off explicitly.
 | Migrations | 24 files on disk |
 | Schedulers | `hmk-br04-expire-offers` (15 min) · `hmk-rr1-release-reservations` (hourly) · `hmk-br08-escalate-sla` (20 min) |
 | Storage | `media` (public), `certificates` (private, **no client policy** — RR-4), `evidence` (private) |
-| Demo data | ⚠ **PRESENT (S008, club-authorised).** 4 fictional trainers `%@demo.hamak.invalid` (**password-less — cannot be signed into**), 3 projects `DEMO-%`, 8 curated expertise rows, 7 technologies. Purge with `supabase/seed/demo_content_CLEANUP.sql`. Real records replace it after the club's team meeting |
+| Demo data | ✅ **Purged (S014)** — the exact four reserved seed profiles, `DEMO-*` projects, and temporary `D2P-*` / `EDITORIAL-*` content markers were removed; unrelated role accounts, technologies, expertise domains, and real records were not touched |
 | Auth | min 8, lower+upper+digits, reauth on password change. **HIBP unavailable — Pro plan only** |
 | **Version control** | ✅ **`github.com/malek-shammout/Hamak-AI-Robotics-Club-Platform`** — 14 commits. No secrets in tree **or history** |
 
@@ -323,14 +323,14 @@ Work cycles through five personas; each hands off explicitly.
 | Module | State |
 |---|---|
 | M1 Public Portal | ✅ courses / projects / events / news, BR-10 verification, club map |
-| M10 Identity | ✅ sign-in, register, callback, sign-out, RBAC |
+| M10 Identity | ✅ **100% complete** — sign-in, register, callback, sign-out, RBAC role matrix, and live staff route authorization |
 | M3 Admissions | ✅ A1 apply/offer/withdraw · A2 funnel, BR-02, BR-03, BR-04 |
 | M3 LMS delivery | ✅ sessions, attendance, BR-05 completion |
 | M4 Assessment | ✅ attempts, auto-grading, question bank, manual grading, readiness |
 | M5 Hardware Custody | ✅ requisitions (D-18), reservation (RR-1), issue/check-in/liability, A3 desk |
 | M6 Clearance & Certification | ✅ §B.2 evaluation, approval, issuance, **PDF + signed URLs (RR-4)** |
 | **M2 Consultations** | ✅ **BUILT (S006)** — public gateway, request/thread, AD-7 triage + expert matching, BR-08 SLA escalation, D-06 curation + member availability |
-| **M7 / M8 / M9 authoring** | ✅ **BUILT (S007)** — projects, events and articles: draft → review → publish, with the BR-11 gate enforced (D-22). Plus a permission-filtered staff hub at `/staff`, without which every staff screen was URL-only |
+| **M7 / M8 / M9 authoring** | ✅ **100% complete** — projects, events and articles: draft → review → reject → revise → resubmit → publish → unpublish, with the BR-11 gate enforced (D-22). Plus a permission-filtered staff hub at `/staff` |
 
 **All ten modules have a working path, and every public entity now has a staff
 authoring path.** The last structural gap is closed. What remains is coverage and
@@ -372,18 +372,19 @@ Every test aborts its transaction; nothing persists (row-counted after).
 | Public + guard flows in a browser | ✅ **Playwright, 134 passing** (chromium + mobile-RTL) |
 | **Signed-in flows** | ✅ **RUN AT LAST (S007)** — 48 passing, 2 skipped (a clearance record the empty DB does not have). Open since Session 002 |
 | **Staff-authorised views** | ✅ **verified on a real staff account** — a role-bearing staff user was created and the signed-in auth suite passed on the real RBAC path |
-| **Staff publication + authoring RBAC** | ✅ **`/staff/news` alias + publish gating coverage added** — the signed-in suite now validates the route matrix and distinguishes authoring access from approval-only actions |
+| **Staff publication + authoring RBAC** | ✅ **100% complete** — `/staff/news` alias, route matrix, authoring controls, approval-only actions, rejection/revision loop coverage, and unpublishing coverage are implemented |
 | **Draft-to-publish smoke checks** | ✅ **Live author → review → approve → publish path exercised** — a role-bearing author and admin were used to validate the project, event, and article transitions without persistent side effects |
 | **Editorial rejection / revision / unpublishing** | ⚠️ **Test coverage added, live execution blocked** — the new suite covers rejection, author revision and resubmission, approval, unpublishing, and non-approver publication guards for projects, events, and articles; the runner had no `E2E_*` credentials, so all auth scenarios skipped |
+| **Launch data cleanup** | ✅ **Complete** — `npm run cleanup:e2e` supports dry-run and explicit execute modes; the live project was cleaned with exact reserved markers and post-delete verification |
 | M2 pages in a real browser | ✅ both locales, RTL/LTR, toggle keeps route + query, no overflow at 375px |
 | **Frontend unit tests** | ✅ **33 tests, 5 files (S007)** — the language toggle (proven regression), the M2 forms, and the BR-11 publish controls. Rendered against the REAL message catalogues, so each doubles as a missing-key check |
 | `npm run i18n:check` | ✅ **fixed (S006)** — `scripts/check-translations.mjs` was referenced by `package.json` for four sessions but **never existed**, so the bilingual gate silently never ran. Written; now asserts key parity AND ICU placeholder parity. 815 keys, clean |
 | **`npm run lint`** | ✅ **FIXED (S007)** — `eslint-config-next@16` exports native flat config, so `FlatCompat` was the wrong tool. 0 errors, 1 documented warning. Every relaxation carries a stated reason. **`npm run verify` now passes end to end** except `test:db`, which needs credentials this machine does not hold |
 
-> The database is exhaustively covered, the frontend has broad public E2E coverage, the
-> signed-in specs and component tests exist. **The remaining verification gap is the
-> editorial rejection/revision/unpublishing loop**, which requires role credentials in the
-> E2E runner; the latest command exited cleanly but skipped every authenticated scenario.
+> The database is exhaustively covered, the frontend has broad public E2E coverage, and the
+> RBAC/authoring implementation is complete. **The editorial live-flow verification remains
+> environment-blocked** until `E2E_*` credentials are supplied to the Playwright process;
+> the latest auth command exited cleanly but skipped every authenticated scenario.
 
 ### Deploy prerequisites
 1. `SUPABASE_SERVICE_ROLE_KEY` in the deploy environment — the `certificates` bucket has
