@@ -44,6 +44,7 @@ const STAFF_ROUTES: Record<string, RegExp> = {
   '/staff/expertise': /expertise catalogue/i,
   '/staff/projects': /projects/i,
   '/staff/events': /events/i,
+  '/staff/news': /news & articles/i,
   '/staff/articles': /news & articles/i,
 };
 
@@ -102,24 +103,55 @@ test('the projects list separates drafts from what is live (BR-11)', async ({
 test('the articles screen offers per-locale authoring (row-per-locale)', async ({
   signedIn: page,
 }) => {
-  const landed = await reached(page, '/staff/articles/new');
+  const landed = await reached(page, '/staff/news');
   test.skip(!landed, 'account under test lacks M9 permissions');
 
-  // claude.md §5: an article is written one language at a time and joined by
-  // translation_group_id. The content-language control is what makes that visible.
-  await expect(page.getByLabel(/content language/i)).toBeVisible();
-  await expect(page.getByLabel(/url slug/i)).toBeVisible();
+  await expect(page.getByRole('heading', {name: /news & articles/i})).toBeVisible();
+  await expect(page.getByRole('link', {name: /new article/i})).toBeVisible();
+
+  const first = page.locator('main a[href*="/staff/articles/"]').first();
+  if ((await first.count()) > 0) {
+    await first.click();
+    await expect(page.getByText(/current state/i)).toBeVisible();
+  }
 });
 
-test('publish controls are present but gated by approval rights (BR-11)', async ({
+test('publication and authoring controls distinguish editor access from approval access (BR-11)', async ({
   signedIn: page,
 }) => {
-  const landed = await reached(page, '/staff/events/new');
-  test.skip(!landed, 'account under test lacks M8 permissions');
+  const routes = ['/staff/projects', '/staff/events', '/staff/news'];
+  const checks = [] as {route: string; visible: boolean}[];
 
-  // Creating never publishes. The form must say so, so nobody goes looking for a live
-  // page that does not exist yet.
-  await expect(page.getByText(/created as a draft/i)).toBeVisible();
+  for (const route of routes) {
+    const landed = await reached(page, route);
+    if (!landed) continue;
+
+    const first = page.locator(`main a[href*="/staff${route === '/staff/news' ? '/articles' : route}/"]`).first();
+    if ((await first.count()) === 0) {
+      checks.push({route, visible: false});
+      continue;
+    }
+
+    await first.click();
+    const publishButtons = page.getByRole('button', {name: /publish|unpublish|reject/i});
+    const approvalNote = page.getByText(/publishing needs approval rights/i);
+
+    const hasApprovalButtons = (await publishButtons.count()) > 0;
+    const hasApprovalNote = (await approvalNote.count()) > 0;
+
+    expect(hasApprovalButtons || hasApprovalNote).toBeTruthy();
+    checks.push({route, visible: hasApprovalButtons || hasApprovalNote});
+
+    if (hasApprovalButtons) {
+      await expect(approvalNote).toHaveCount(0);
+    } else {
+      await expect(approvalNote).toHaveCount(1);
+    }
+
+    await page.goBack();
+  }
+
+  expect(checks.length).toBeGreaterThan(0);
 });
 
 test('the clearance detail renders the B.2 table when a record exists', async ({

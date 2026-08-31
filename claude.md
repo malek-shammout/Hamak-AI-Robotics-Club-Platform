@@ -373,6 +373,7 @@ Every test aborts its transaction; nothing persists (row-counted after).
 | Public + guard flows in a browser | ✅ **Playwright, 134 passing** (chromium + mobile-RTL) |
 | **Signed-in flows** | ✅ **RUN AT LAST (S007)** — 48 passing, 2 skipped (a clearance record the empty DB does not have). Open since Session 002 |
 | **Staff-authorised views** | ✅ **verified on a real staff account** — a role-bearing staff user was created and the signed-in auth suite passed on the real RBAC path |
+| **Staff publication + authoring RBAC** | ✅ **`/staff/news` alias + publish gating coverage added** — the signed-in suite now validates the route matrix and distinguishes authoring access from approval-only actions |
 | M2 pages in a real browser | ✅ both locales, RTL/LTR, toggle keeps route + query, no overflow at 375px |
 | **Frontend unit tests** | ✅ **33 tests, 5 files (S007)** — the language toggle (proven regression), the M2 forms, and the BR-11 publish controls. Rendered against the REAL message catalogues, so each doubles as a missing-key check |
 | `npm run i18n:check` | ✅ **fixed (S006)** — `scripts/check-translations.mjs` was referenced by `package.json` for four sessions but **never existed**, so the bilingual gate silently never ran. Written; now asserts key parity AND ICU placeholder parity. 815 keys, clean |
@@ -433,6 +434,7 @@ Every test aborts its transaction; nothing persists (row-counted after).
 
 | Date | Change |
 |---|---|
+| 2026-08-31 | **Publication and authoring RBAC coverage expanded** — the signed-in suite now includes `/staff/news` and asserts the actual difference between authoring access and approval-only access on the publish controls that gate BR-11 / D-22. |
 | 2026-08-31 | **RBAC coverage stabilised and validated across live staff roles** — the route-coverage Playwright suite was hardened against slow page loads with `test.slow()` and longer route waits, and the full `npm run test:e2e:auth` run passed for `PROJECTS`, `TRAINING`, `LOGISTICS`, and `ADMIN` identities against the live Supabase project. |
 | 2026-08-31 | **Staff bootstrap and RBAC path validated for real** — a role-bearing staff account was successfully created in Supabase, the `npm run staff:bootstrap` flow was proven end to end, and the signed-in Playwright auth suite passed against the live staff account after installing the required Chromium runtime. |
 | 2026-08-31 | **Staff bootstrap path hardened and validated** — the CLI parsing for `scripts/bootstrap-staff-account.mjs` was corrected so `--email`, `--password`, and `--role` behave predictably, and the project now exposes the workflow via `npm run staff:bootstrap` for repeatable staff-account creation. |

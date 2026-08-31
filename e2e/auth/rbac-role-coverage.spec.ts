@@ -2,10 +2,10 @@ import {expect, test} from '@playwright/test';
 import {signIn, STAFF_ROLE_CREDENTIALS} from './fixtures';
 
 const ROLE_MATRIX = {
-  PROJECTS: ['/staff', '/staff/projects', '/staff/consultations'],
+  PROJECTS: ['/staff', '/staff/projects', '/staff/news', '/staff/consultations'],
   TRAINING: ['/staff', '/staff/cohorts', '/staff/questions'],
   LOGISTICS: ['/staff', '/staff/requisitions', '/staff/desk'],
-  ADMIN: ['/staff', '/staff/projects', '/staff/requisitions', '/staff/clearance'],
+  ADMIN: ['/staff', '/staff/projects', '/staff/news', '/staff/requisitions', '/staff/clearance'],
 } as const;
 
 for (const [role, routes] of Object.entries(ROLE_MATRIX) as [keyof typeof ROLE_MATRIX, readonly string[]][]) {

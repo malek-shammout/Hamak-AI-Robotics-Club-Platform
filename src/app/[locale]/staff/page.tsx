@@ -52,7 +52,7 @@ export default async function StaffHubPage({
     {show: m2, href: '/staff/expertise', icon: MessagesSquare, key: 'expertise'},
     {show: m7, href: '/staff/projects', icon: FolderGit2, key: 'projects'},
     {show: m8, href: '/staff/events', icon: CalendarDays, key: 'events'},
-    {show: m9, href: '/staff/articles', icon: Newspaper, key: 'articles'},
+    {show: m9, href: '/staff/news', icon: Newspaper, key: 'articles'},
   ].filter((tile) => tile.show);
 
   return (
