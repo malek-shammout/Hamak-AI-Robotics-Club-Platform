@@ -14,6 +14,9 @@
     "signIn": "تسجيل الدخول",
     "dashboard": "لوحة التحكم",
     "skipToContent": "تخطَّ إلى المحتوى",
+    "menu": "فتح قائمة التنقل",
+    "closeMenu": "إغلاق قائمة التنقل",
+    "mobileNavigation": "قائمة التنقل للهاتف",
     "staffProjects": "المشاريع",
     "staffEvents": "الفعاليات",
     "staffArticles": "المقالات"

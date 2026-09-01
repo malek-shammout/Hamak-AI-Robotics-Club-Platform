@@ -4,6 +4,7 @@ import {LanguageToggle} from './language-toggle';
 import {ThemeToggle} from './theme-toggle';
 import {BinaryBar} from './binary-bar';
 import {SignOutButton} from './auth/sign-out-button';
+import {MobileNavigation} from './mobile-navigation';
 import {getSessionUser} from '@/lib/auth/session';
 import {localised} from '@/lib/utils';
 import type {Locale} from '@/i18n/routing';
@@ -12,6 +13,9 @@ export async function SiteHeader({locale}: {locale: Locale}) {
   const t = await getTranslations('nav');
   const tAuth = await getTranslations('auth');
   const tApp = await getTranslations('applications');
+  const tEnrollment = await getTranslations('lms');
+  const tCertificates = await getTranslations('myCerts');
+  const tConsultations = await getTranslations('consultations');
   const tStaff = await getTranslations('staffHub');
 
   const user = await getSessionUser();
@@ -23,13 +27,38 @@ export async function SiteHeader({locale}: {locale: Locale}) {
     {href: '/events', label: t('events')},
     {href: '/news', label: t('news')},
   ] as const;
+  const signedInLinks = [
+    {href: '/me/applications', label: tApp('title')},
+    {href: '/me/enrollments', label: tEnrollment('myEnrollments')},
+    {href: '/me/certificates', label: tCertificates('title')},
+    {href: '/me/consultations', label: tConsultations('myTitle')},
+    {href: '/staff', label: tStaff('title')},
+  ] as const;
 
   return (
     <header className="sticky top-0 z-40 border-b border-[--border] bg-[--surface]/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4">
+      <div className="mx-auto flex h-16 min-w-0 max-w-6xl items-center gap-3 px-4 sm:gap-6">
         <Link href="/" className="font-accent text-lg tracking-widest text-hmk-red">
           HMK
         </Link>
+        <MobileNavigation
+          links={[...links]}
+          signedInLinks={[...signedInLinks]}
+          userName={
+            user
+              ? localised(
+                  {full_name_ar: user.fullNameAr, full_name_en: user.fullNameEn},
+                  'full_name',
+                  locale
+                )
+              : undefined
+          }
+          signInLabel={tAuth('signIn')}
+          signOutLabel={tAuth('signOut')}
+          menuLabel={t('menu')}
+          closeLabel={t('closeMenu')}
+          navigationLabel={t('mobileNavigation')}
+        />
 
         {/* Logical properties only - `ms-auto` mirrors correctly in RTL. claude.md 7 */}
         <nav aria-label={t('home')} className="hidden gap-5 md:flex">
@@ -44,7 +73,7 @@ export async function SiteHeader({locale}: {locale: Locale}) {
           ))}
         </nav>
 
-        <div className="ms-auto flex items-center gap-2">
+        <div className="ms-auto flex min-w-0 items-center gap-2">
           {user ? (
             <>
               <Link

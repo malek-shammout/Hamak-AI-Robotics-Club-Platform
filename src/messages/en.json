@@ -14,6 +14,9 @@
     "signIn": "Sign in",
     "dashboard": "Dashboard",
     "skipToContent": "Skip to content",
+    "menu": "Open navigation menu",
+    "closeMenu": "Close navigation menu",
+    "mobileNavigation": "Mobile navigation",
     "staffProjects": "Projects",
     "staffEvents": "Events",
     "staffArticles": "Articles"
