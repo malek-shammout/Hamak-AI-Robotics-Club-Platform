@@ -69,16 +69,16 @@ export function MobileNavigation({
       </button>
 
       {open ? (
-        <div className="fixed inset-0 top-16 z-30 md:hidden">
+        <div className="fixed inset-0 z-50 md:hidden">
           <button
             type="button"
             aria-label={closeLabel}
             onClick={closeMenu}
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           />
           <div
             id="mobile-navigation-drawer"
-            className="relative max-h-[calc(100dvh-4rem)] overflow-y-auto border-b
+            className="relative mt-16 max-h-[calc(100dvh-4rem)] overflow-y-auto border-b
                        border-[--border] bg-[--surface] px-4 py-5 shadow-lg"
           >
             <nav aria-label={navigationLabel} className="grid gap-1">
